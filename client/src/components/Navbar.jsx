@@ -5,8 +5,8 @@ export default function Navbar({ currentPage, onPageChange }) {
     <nav className="navbar">
       <div className="navbar-container">
         <div className="navbar-brand">
-          <h1>💰 Payroll Management System</h1>
-          <p className="subtitle">Biometric Attendance Based Salary Calculator</p>
+          <h1>CSD's Salary Calculator</h1>
+          <p className="subtitle">Upload the Excel file to calculate salaries</p>
         </div>
         <ul className="navbar-menu">
           <li>

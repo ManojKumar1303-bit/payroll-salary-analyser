@@ -36,8 +36,7 @@ function App() {
 
       <footer className="footer">
         <p>
-          © 2026 Payroll Management System | Biometric Attendance Based Salary
-          Calculator
+          © 2026 Kaaraalan Goli Soda and Cattle farm. All rights reserved. Developed by Manoj Kumar U.
         </p>
       </footer>
     </div>

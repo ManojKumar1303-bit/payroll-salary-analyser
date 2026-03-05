@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 export default function SalarySettings({ onSettingsChange }) {
   const [latePenalty, setLatePenalty] = useState(50);
   const [earlyLeavePenalty, setEarlyLeavePenalty] = useState(50);
-  const [overtimeRate, setOvertimeRate] = useState(100);
+  const [overtimeRate, setOvertimeRate] = useState(50);
 
   useEffect(() => {
     // Notify parent of settings change
