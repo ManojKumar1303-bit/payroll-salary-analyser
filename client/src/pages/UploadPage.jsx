@@ -96,7 +96,8 @@ export default function UploadPage() {
     }
   };
 
-  const handleReset = async () => {
+  // called from the "Start New Calculation" / clear button
+  const handleClear = async () => {
     if (window.confirm('Are you sure you want to clear all data and start over?')) {
       try {
         await clearSessionData();
@@ -104,10 +105,20 @@ export default function UploadPage() {
         setUploadedEmployees([]);
         setDailyReports([]);
         setSummary([]);
+        // revert settings to defaults as well
+        setSettings({
+          latePenalty: 50,
+          earlyLeavePenalty: 50,
+          overtimeRate: 100,
+        });
         setError('');
         setSuccessMessage('Data cleared. Ready for new upload.');
       } catch (err) {
-        setError('Failed to clear data.');
+        // API failed; keep UI intact but show error
+        setError(
+          err.response?.data?.error ||
+          'Failed to clear data. Please try again.'
+        );
       }
     }
   };
@@ -143,7 +154,7 @@ export default function UploadPage() {
 
           <div className="action-buttons">
             <button
-              onClick={handleReset}
+              onClick={handleClear}
               className="btn btn-warning"
             >
               Start New Calculation
