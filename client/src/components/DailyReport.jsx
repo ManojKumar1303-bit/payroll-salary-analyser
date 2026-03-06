@@ -8,54 +8,67 @@ export default function DailyReport({ dailyReports }) {
   return (
     <div className="card">
       <div className="card-header">
-        <h3>Daily Salary Reports</h3>
-        <p className="text-muted">Detailed salary breakdown for each day</p>
+        <h3>📅 Daily Salary Reports</h3>
+        <p>Detailed breakdown of salary calculations for each working day</p>
       </div>
       <div className="card-body">
         {dailyReports.map((dayReport, dayIndex) => {
           // Get date from first record in the day
           const date = dayReport[0]?.date || `Day ${dayIndex + 1}`;
+          const totalSalary = dayReport.reduce((sum, record) => sum + record.finalSalary, 0);
+          const presentCount = dayReport.filter(r => !r.attendanceStatus?.includes('Absent')).length;
 
           return (
             <div key={dayIndex} className="daily-report-section">
-              <h4>
-                Date: <strong>{date}</strong>
-              </h4>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <h4 style={{ margin: 0 }}>📆 <strong>{date}</strong></h4>
+                <div style={{ fontSize: '13px', color: '#64748b' }}>
+                  {presentCount} Present | Total: <strong style={{ color: '#2563eb' }}>₹{totalSalary.toFixed(2)}</strong>
+                </div>
+              </div>
               <div className="table-responsive">
                 <table className="table table-sm table-striped">
                   <thead>
                     <tr>
-                      <th>Employee ID</th>
-                      <th>Name</th>
+                      <th>ID</th>
+                      <th>Employee Name</th>
                       <th>Shift</th>
-                      <th>Late (hrs)</th>
-                      <th>Early Leave (hrs)</th>
-                      <th>Overtime (hrs)</th>
-                      <th>Base Salary</th>
-                      <th>Late Deduction</th>
-                      <th>Early Leave Deduction</th>
-                      <th>Overtime Payment</th>
-                      <th>Final Salary</th>
+                      <th className="numeric">Late (hrs)</th>
+                      <th className="numeric">Early (hrs)</th>
+                      <th className="numeric">OT (hrs)</th>
+                      <th className="numeric">Base</th>
+                      <th className="numeric">Late Ded.</th>
+                      <th className="numeric">Early Ded.</th>
+                      <th className="numeric">OT Bonus</th>
+                      <th className="numeric">Final Salary</th>
                       <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {dayReport.map((record, idx) => (
                       <tr key={idx}>
-                        <td>{record.employeeId}</td>
+                        <td><strong>{record.employeeId}</strong></td>
                         <td>
                           {record.firstName} {record.lastName}
                         </td>
                         <td>{record.shift}</td>
-                        <td>{record.lateDuration.toFixed(2)}</td>
-                        <td>{record.earlyLeaveDuration.toFixed(2)}</td>
-                        <td>{record.overtimeDuration.toFixed(2)}</td>
-                        <td>₹{record.baseSalary.toFixed(2)}</td>
-                        <td>-₹{record.lateDeduction.toFixed(2)}</td>
-                        <td>-₹{record.earlyLeaveDeduction.toFixed(2)}</td>
-                        <td>+₹{record.overtimePayment.toFixed(2)}</td>
-                        <td>
-                          <strong>₹{record.finalSalary.toFixed(2)}</strong>
+                        <td className="numeric">{record.lateDuration.toFixed(2)}</td>
+                        <td className="numeric">{record.earlyLeaveDuration.toFixed(2)}</td>
+                        <td className="numeric">{record.overtimeDuration.toFixed(2)}</td>
+                        <td className="numeric">₹{record.baseSalary.toFixed(2)}</td>
+                        <td className="numeric" style={{ color: '#ef4444' }}>
+                          -₹{record.lateDeduction.toFixed(2)}
+                        </td>
+                        <td className="numeric" style={{ color: '#ef4444' }}>
+                          -₹{record.earlyLeaveDeduction.toFixed(2)}
+                        </td>
+                        <td className="numeric" style={{ color: '#10b981' }}>
+                          +₹{record.overtimePayment.toFixed(2)}
+                        </td>
+                        <td className="numeric">
+                          <strong style={{ color: '#2563eb', fontSize: '15px' }}>
+                            ₹{record.finalSalary.toFixed(2)}
+                          </strong>
                         </td>
                         <td>
                           <span

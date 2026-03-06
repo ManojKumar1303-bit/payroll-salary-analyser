@@ -123,17 +123,64 @@ export default function UploadPage() {
     }
   };
 
+  // Progress indicators
+  const currentStep = summary.length > 0 ? 4 : (dailyReports.length > 0 ? 3 : (uploadedEmployees.length > 0 ? 2 : 1));
+  const steps = ['Upload', 'Configure', 'Calculate', 'Review'];
+
   return (
     <div className="container">
-      {error && <div className="alert alert-danger">{error}</div>}
+      {/* Progress Steps */}
+      <div style={{ marginBottom: '30px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+          {steps.map((step, idx) => (
+            <React.Fragment key={idx}>
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 700,
+                  color: 'white',
+                  backgroundColor: idx + 1 <= currentStep ? '#2563eb' : '#e5e7eb',
+                  transition: 'all 0.3s ease',
+                }}
+              >
+                {idx + 1 <= currentStep ? '✓' : idx + 1}
+              </div>
+              <span style={{ fontWeight: 600, color: idx + 1 <= currentStep ? '#2563eb' : '#9ca3af' }}>
+                {step}
+              </span>
+              {idx < steps.length - 1 && (
+                <div
+                  style={{
+                    width: '30px',
+                    height: '2px',
+                    backgroundColor: idx + 1 < currentStep ? '#2563eb' : '#e5e7eb',
+                    margin: '0 5px',
+                  }}
+                />
+              )}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      {/* Alerts */}
+      {error && <div className="alert alert-danger">⚠️ {error}</div>}
       {successMessage && (
-        <div className="alert alert-success">{successMessage}</div>
+        <div className="alert alert-success">✓ {successMessage}</div>
       )}
 
+      {/* Step 1: File Upload */}
       <FileUpload onUploadSuccess={handleUploadSuccess} uploadedFiles={uploadedFiles} />
 
+      {/* Step 2: Salary Settings */}
       <SalarySettings onSettingsChange={handleSettingsChange} />
 
+      {/* Step 3: Employee Salary Setup */}
       {uploadedEmployees.length > 0 && (
         <EmployeeSalaryTable
           employees={uploadedEmployees}
@@ -142,6 +189,7 @@ export default function UploadPage() {
         />
       )}
 
+      {/* Step 4: Review Reports */}
       {dailyReports.length > 0 && <DailyReport dailyReports={dailyReports} />}
 
       {summary.length > 0 && (
@@ -155,9 +203,10 @@ export default function UploadPage() {
           <div className="action-buttons">
             <button
               onClick={handleClear}
-              className="btn btn-warning"
+              className="btn btn-warning btn-lg"
+              title="Clear all data and start a new calculation"
             >
-              Start New Calculation
+              🔄 Start New Calculation
             </button>
           </div>
         </>

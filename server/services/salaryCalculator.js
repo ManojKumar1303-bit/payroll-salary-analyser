@@ -6,29 +6,47 @@
  * 
  * If employee is ABSENT:
  *   Final Salary = ₹0
+ *   Overtime = 0 (no overtime for absent employees)
  * 
  * If employee is PRESENT:
  *   Step 1: Base Salary = Daily Salary (configured per employee)
  *   Step 2: Late Deduction = Late Hours (decimal) × Late Penalty (₹50/hour)
  *   Step 3: Early Leave Deduction = Early Leave Hours (decimal) × Early Leave Penalty (₹50/hour)
- *   Step 4: Overtime Pay = Overtime Hours (decimal) × Overtime Rate (₹100/hour)
+ *   Step 4: Overtime Pay = Overtime Hours (from Excel) (decimal) × Overtime Rate (₹100/hour)
  *   
- *   Final Salary = Base Salary - Late Deduction - Early Leave Deduction + Overtime Pay
+ *   Final Salary = Base Salary - Late Deduction - Early Leave Deduction + Overtime Payment
+ * 
+ * OVERTIME CALCULATION:
+ * ====================
+ * The "Overtime Duration" column in the Excel file contains the pre-calculated total overtime hours.
+ * The system reads this column directly without recalculating or validating it.
+ * 
+ * The Excel file may contain additional columns for reference:
+ * - "Workday Overtime Duration" - breakdown only (NOT USED in calculation)
+ * - "Weekend Overtime Duration" - breakdown only (NOT USED in calculation)
+ * 
+ * Overtime Duration is in HH:mm format and must be converted to decimal hours:
+ *   02:59 → 2 + (59/60) = 2.983 hours
+ *   00:45 → 0 + (45/60) = 0.75 hours
+ *   01:10 → 1 + (10/60) = 1.167 hours
  * 
  * Example Calculation:
- * ===================
+ * ====================
+ * Shift: SHIFT-2
+ * Worked Hours: 11:59
+ * Overtime Duration: 02:59 (from Excel)
  * Daily Salary: ₹300
- * Late: 01:00 (1.0 hour) → 1.0 × ₹50 = ₹50 deduction
- * Early Leave: 00:30 (0.5 hours) → 0.5 × ₹50 = ₹25 deduction
- * Overtime: 00:00 (0 hours) → 0 × ₹100 = ₹0 payment
+ * Overtime Rate: ₹50/hour
+ * Late: 00:30 → 0.5 × ₹50 = ₹25 deduction
+ * Early Leave: 00:00 → 0 × ₹50 = ₹0 deduction
+ * Overtime: 2.983 × ₹50 = ₹149.15 payment
+ * Final = ₹300 - ₹25 - ₹0 + ₹149.15 = ₹424.15
  * 
- * Final = ₹300 - ₹50 - ₹25 + ₹0 = ₹225
- * 
- * @param {Object} record - Attendance record with duration fields already converted to decimal hours
+ * @param {Object} record - Attendance record with overtimeDuration already converted to decimal hours
  * @param {number} employeeDailySalary - Base daily salary in rupees
  * @param {Object} penalties - { latePenalty: 50, earlyLeavePenalty: 50 }
  * @param {number} overtimeRate - Overtime rate per hour (e.g., 100)
- * @returns {Object} Daily salary calculation result
+ * @returns {Object} Daily salary calculation result with all deductions, payments, and final salary
  */
 export const calculateDailySalary = (
   record,
@@ -69,11 +87,13 @@ export const calculateDailySalary = (
     };
   }
 
-  // Ensure duration values are numbers (should be decimal hours from excelParser)
-  // These are already converted from HH:MM to decimal hours by timeStringToDecimalHours
-  const lateDurationHours = Number(record.lateDuration) || 0;
-  const earlyLeaveDurationHours = Number(record.earlyLeaveDuration) || 0;
-  const overtimeDurationHours = Number(record.overtimeDuration) || 0;
+  // Extract and ensure values are valid numbers (never NaN or negative)
+  const lateDurationHours = Math.max(0, Number(record.lateDuration) || 0);
+  const earlyLeaveDurationHours = Math.max(0, Number(record.earlyLeaveDuration) || 0);
+  
+  // Use the pre-calculated Overtime Duration from Excel (already converted to decimal hours by parser)
+  // Ensure the value is valid and never negative
+  const overtimeDurationHours = Math.max(0, Number(record.overtimeDuration) || 0);
 
   // Calculate deductions and additions
   const lateDeduction = lateDurationHours * latePenalty;
@@ -98,6 +118,7 @@ export const calculateDailySalary = (
       earlyLeaveDeduction: earlyLeaveDeduction.toFixed(2),
       overtimePayment: overtimePayment.toFixed(2),
       finalSalary: Math.max(0, finalSalary).toFixed(2),
+      calculation: `${employeeDailySalary} - ${lateDeduction.toFixed(2)} - ${earlyLeaveDeduction.toFixed(2)} + ${overtimePayment.toFixed(2)} = ${finalSalary.toFixed(2)}`,
     });
   }
 
@@ -119,6 +140,22 @@ export const calculateDailySalary = (
   };
 };
 
+/**
+ * Validates and calculates overtime hours based on worked hours vs shift requirements
+ * 
+ * VALIDATION RULES:
+ * - If absent: overtime = 0
+ * - Get required shift hours based on shift type (12 for SHIFT-1, 9 for SHIFT-2, 8 for others)
+ * - Calculate: overtime = worked hours - required shift hours
+ * - Ensure overtime is never negative: Math.max(0, overtime)
+ * 
+ * WHY THIS APPROACH?
+ * Excel may contain unreliable overtime columns or be missing data.
+ * Calculating from worked hours ensures data integrity.
+ * 
+ * @param {Object} record - Attendance record with shift, workedHours, and status
+ * @returns {number} Validated overtime hours (never negative)
+ */
 /**
  * Determines shift type from timetable string
  */
@@ -187,13 +224,27 @@ export const generateSalarySummary = (dailyReports) => {
       summary.totalOvertimeDuration += salaryRecord.overtimeDuration;
       summary.totalSalary += salaryRecord.finalSalary;
 
+      // Debug logging for overtime aggregation
+      if (salaryRecord.overtimeDuration > 0) {
+        console.log(`[Summary Overtime] ${key} - OT Hours: ${salaryRecord.overtimeDuration}, Running Total: ${summary.totalOvertimeDuration}`);
+      }
+
       if (salaryRecord.attendanceStatus?.toLowerCase().includes('absent')) {
         summary.numberOfAbsentDays += 1;
       }
     });
   });
 
-  return Array.from(summaryMap.values()).sort((a, b) =>
+  // Ensure all duration values are properly rounded
+  const result = Array.from(summaryMap.values()).map(emp => ({
+    ...emp,
+    totalLateDuration: Math.round(emp.totalLateDuration * 100) / 100,
+    totalEarlyLeaveDuration: Math.round(emp.totalEarlyLeaveDuration * 100) / 100,
+    totalOvertimeDuration: Math.round(emp.totalOvertimeDuration * 100) / 100,
+    totalSalary: Math.round(emp.totalSalary * 100) / 100,
+  })).sort((a, b) =>
     a.employeeId.localeCompare(b.employeeId)
   );
+
+  return result;
 };

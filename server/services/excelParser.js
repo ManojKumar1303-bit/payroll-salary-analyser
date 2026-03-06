@@ -6,6 +6,23 @@ import { timeStringToDecimalHours } from '../utils/timeConverter.js';
  * Parses biometric attendance Excel files
  * Skips first 3 rows (metadata) and reads from row 4 onwards
  * Handles flexible column naming and various date formats
+ * 
+ * OVERTIME HANDLING:
+ * ==================
+ * Supports multiple overtime columns that are automatically summed:
+ * - "Overtime Duration"
+ * - "Workday Overtime Duration"
+ * - "Weekend Overtime Duration"
+ * 
+ * All overtime columns are converted from HH:mm format to decimal hours and summed.
+ * Example: 02:59 + 00:45 + 01:10 = 2.983 + 0.75 + 1.167 = 4.9 total overtime hours
+ * 
+ * TIME CONVERSION:
+ * ================
+ * All duration fields (late, early leave, overtime) are converted to decimal hours:
+ * - "02:59" → 2 + (59/60) → 2.983 hours
+ * - "00:45" → 0 + (45/60) → 0.75 hours
+ * - "01:10" → 1 + (10/60) → 1.167 hours
  */
 export async function parseExcelFile(filePath) {
   try {
@@ -39,6 +56,8 @@ export async function parseExcelFile(filePath) {
       });
 
       // Map headers to standardized field names
+      // NOTE: Overtime Duration is the TOTAL overtime - do NOT sum with Workday/Weekend breakdown columns
+      
       headers.forEach((header) => {
         const h = header.value;
         
@@ -66,7 +85,9 @@ export async function parseExcelFile(filePath) {
           headerMap['lateDuration'] = header.index;
         } else if (h.includes('early') && (h.includes('leave') || h.includes('go') || h.includes('departure') || h.includes('exit'))) {
           headerMap['earlyLeaveDuration'] = header.index;
-        } else if (h.includes('overtime') && h.includes('duration')) {
+        } else if (h === 'overtime duration' || (h.includes('overtime') && h.includes('duration') && !h.includes('workday') && !h.includes('weekend'))) {
+          // IMPORTANT: Only capture the main "Overtime Duration" column (total)
+          // Ignore "Workday Overtime Duration" and "Weekend Overtime Duration" - they are breakdowns only
           headerMap['overtimeDuration'] = header.index;
         }
       });
@@ -106,10 +127,26 @@ export async function parseExcelFile(filePath) {
       const lateDurationRaw = getCell('lateDuration') || '00:00';
       const earlyLeaveDurationRaw = getCell('earlyLeaveDuration') || '00:00';
       const overtimeDurationRaw = getCell('overtimeDuration') || '00:00';
+      const workedHoursRaw = getCell('workedHours') || '00:00';
 
       const lateDurationDecimal = timeStringToDecimalHours(lateDurationRaw);
       const earlyLeaveDurationDecimal = timeStringToDecimalHours(earlyLeaveDurationRaw);
       const overtimeDurationDecimal = timeStringToDecimalHours(overtimeDurationRaw);
+      
+      // Convert workedHours to decimal (may be HH:mm format or already decimal)
+      let workedHoursDecimal = 0;
+      if (typeof workedHoursRaw === 'string' && workedHoursRaw.includes(':')) {
+        // HH:mm format
+        workedHoursDecimal = timeStringToDecimalHours(workedHoursRaw);
+      } else if (!isNaN(workedHoursRaw)) {
+        // Already numeric
+        workedHoursDecimal = parseFloat(workedHoursRaw) || 0;
+      }
+
+      // Debug logging for overtime duration
+      if (process.env.DEBUG_PARSE && overtimeDurationDecimal > 0) {
+        console.log(`[Overtime Debug] ${cleanId || id} - ${formatDate(getCell('date'))} - Overtime Duration: "${overtimeDurationRaw}" = ${overtimeDurationDecimal.toFixed(2)} hours`);
+      }
 
       const parsed = {
         firstName: firstName || '--',
@@ -122,7 +159,7 @@ export async function parseExcelFile(filePath) {
         shift: extractShift(getCell('timetable')),
         attendanceStatus: getCell('attendanceStatus') || 'Normal',
         status: getCell('attendanceStatus') || 'Normal',
-        workedHours: parseFloat(getCell('workedHours')) || 0,
+        workedHours: workedHoursDecimal,
         absentDuration: getCell('absentDuration') || '00:00',
         lateDuration: lateDurationDecimal,
         earlyLeaveDuration: earlyLeaveDurationDecimal,

@@ -10,6 +10,7 @@ import { clearSessionData } from './services/api';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('upload');
+  const [isDarkTheme, setIsDarkTheme] = useState(false);
 
   // clear any stale session data on initial mount so every user starts with a clean slate
   useEffect(() => {
@@ -24,9 +25,13 @@ function App() {
     reset();
   }, []);
 
+  const toggleTheme = () => {
+    setIsDarkTheme(!isDarkTheme);
+  };
+
   return (
-    <div className="app">
-      <Navbar currentPage={currentPage} onPageChange={setCurrentPage} />
+    <div className={`app ${isDarkTheme ? 'dark-theme' : 'light-theme'}`}>
+      <Navbar currentPage={currentPage} onPageChange={setCurrentPage} isDarkTheme={isDarkTheme} onThemeToggle={toggleTheme} />
 
       <main className="main-content">
         {currentPage === 'upload' && <UploadPage />}

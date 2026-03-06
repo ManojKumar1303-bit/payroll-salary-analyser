@@ -32,7 +32,10 @@ export default function DailyReportsPage() {
   if (isLoading) {
     return (
       <div className="container">
-        <div className="loading-message">Loading daily reports...</div>
+        <div className="loading-message">
+          <div className="spinner" />
+          <span>Loading daily reports...</span>
+        </div>
       </div>
     );
   }
@@ -40,7 +43,7 @@ export default function DailyReportsPage() {
   if (error) {
     return (
       <div className="container">
-        <div className="alert alert-danger">{error}</div>
+        <div className="alert alert-danger">⚠️ {error}</div>
       </div>
     );
   }
@@ -48,85 +51,153 @@ export default function DailyReportsPage() {
   if (!reportData || !reportData.dailyReports || reportData.dailyReports.length === 0) {
     return (
       <div className="container">
-        <div className="alert alert-info">No daily reports available. Please upload and calculate salary first.</div>
+        <div className="alert alert-info">
+          💡 No daily reports available. Please upload and calculate salary first.
+        </div>
       </div>
     );
   }
+
+  const totalSalary = reportData.dailyReports.reduce((sum, day) => {
+    return sum + day.reduce((daySum, record) => daySum + record.finalSalary, 0);
+  }, 0);
 
   return (
     <div className="container">
       <div className="card">
         <div className="card-header">
-          <h3>Daily Salary Reports</h3>
-          <p className="text-muted">Salary report for each uploaded attendance Excel file</p>
+          <h3>📅 Daily Salary Reports</h3>
+          <p>Detailed salary breakdown for each working day from attendance records</p>
         </div>
         <div className="card-body">
+          {/* Report Info */}
           <div className="report-info">
             <div className="info-item">
-              <strong>Upload Date:</strong>{' '}
-              {new Date(reportData.uploadDate).toLocaleDateString()}
+              <strong>📅 Upload Date</strong>
+              <div>{new Date(reportData.uploadDate).toLocaleDateString()}</div>
             </div>
             <div className="info-item">
-              <strong>Files Processed:</strong> {reportData.filesProcessed}
+              <strong>📁 Files Processed</strong>
+              <div>{reportData.filesProcessed}</div>
             </div>
             <div className="info-item">
-              <strong>Total Employees:</strong> {reportData.totalEmployees}
+              <strong>👥 Total Employees</strong>
+              <div>{reportData.totalEmployees}</div>
             </div>
             <div className="info-item">
-              <strong>Calculation Date:</strong>{' '}
-              {new Date(reportData.calculationDate).toLocaleDateString()}
+              <strong>📆 Calculation Date</strong>
+              <div>{new Date(reportData.calculationDate).toLocaleDateString()}</div>
             </div>
           </div>
 
-          <div className="settings-info">
-            <strong>Salary Rules Applied:</strong>
-            <ul>
-              <li>Late Penalty: ₹{reportData.penalties.latePenalty}/hour</li>
+          {/* Summary Stats */}
+          <div className="summary-stats">
+            <div className="stat-box">
+              <h5>Total Days</h5>
+              <div className="stat-value">{reportData.dailyReports.length}</div>
+            </div>
+            <div className="stat-box">
+              <h5>Total Salary</h5>
+              <div className="stat-value">₹{totalSalary.toFixed(0)}</div>
+            </div>
+            <div className="stat-box">
+              <h5>Avg per Day</h5>
+              <div className="stat-value">
+                ₹{(totalSalary / reportData.dailyReports.length).toFixed(0)}
+              </div>
+            </div>
+          </div>
+
+          {/* Settings Info */}
+          <div className="settings-summary">
+            <strong>⚙️ Salary Rules Applied</strong>
+            <ul style={{ marginTop: '10px' }}>
               <li>
-                Early Leave Penalty: ₹
-                {reportData.penalties.earlyLeavePenalty}/hour
+                <strong>Late Penalty:</strong> ₹{reportData.penalties.latePenalty}/hour
               </li>
-              <li>Overtime Pay: ₹{reportData.overtimeRate}/hour</li>
+              <li>
+                <strong>Early Leave Penalty:</strong> ₹{reportData.penalties.earlyLeavePenalty}/hour
+              </li>
+              <li>
+                <strong>Overtime Pay:</strong> ₹{reportData.overtimeRate}/hour
+              </li>
             </ul>
           </div>
 
-          <div className="table-responsive">
+          {/* Daily Reports */}
+          <div style={{ marginTop: '24px' }}>
             {reportData.dailyReports.map((dayReport, dayIndex) => {
               // Get date from first record in the day
               const date = dayReport[0]?.date || `Day ${dayIndex + 1}`;
+              const daySalary = dayReport.reduce((sum, r) => sum + r.finalSalary, 0);
+              const presentCount = dayReport.filter(r => !r.attendanceStatus?.includes('Absent')).length;
 
               return (
                 <div key={dayIndex} className="daily-report-section">
-                  <h4>
-                    Date: <strong>{date}</strong>
-                  </h4>
-                  <table className="table table-sm table-striped">
-                    <thead>
-                      <tr>
-                        <th>Employee Name</th>
-                        <th>Employee ID</th>
-                        <th>Late Duration</th>
-                        <th>Early Leave Duration</th>
-                        <th>Overtime Duration</th>
-                        <th>Final Salary</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dayReport.map((record, idx) => (
-                        <tr key={idx}>
-                          <td>{record.firstName} {record.lastName}</td>
-                          <td>{record.employeeId}</td>
-                          <td>{record.lateDuration.toFixed(2)} hrs</td>
-                          <td>{record.earlyLeaveDuration.toFixed(2)} hrs</td>
-                          <td>{record.overtimeDuration.toFixed(2)} hrs</td>
-                          <td>₹{record.finalSalary.toFixed(2)}</td>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                    <h4 style={{ margin: 0 }}>📆 <strong>{date}</strong></h4>
+                    <div style={{ fontSize: '13px', color: '#64748b' }}>
+                      {presentCount} Present | Total: <strong style={{ color: '#2563eb' }}>₹{daySalary.toFixed(2)}</strong>
+                    </div>
+                  </div>
+                  <div className="table-responsive">
+                    <table className="table table-sm table-striped">
+                      <thead>
+                        <tr>
+                          <th>ID</th>
+                          <th>Employee Name</th>
+                          <th>Shift</th>
+                          <th className="numeric">Late (hrs)</th>
+                          <th className="numeric">Early (hrs)</th>
+                          <th className="numeric">OT (hrs)</th>
+                          <th className="numeric">Final Salary</th>
+                          <th>Status</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {dayReport.map((record, idx) => (
+                          <tr key={idx}>
+                            <td><strong>{record.employeeId}</strong></td>
+                            <td>{record.firstName} {record.lastName}</td>
+                            <td>{record.shift}</td>
+                            <td className="numeric">{record.lateDuration.toFixed(2)}</td>
+                            <td className="numeric">{record.earlyLeaveDuration.toFixed(2)}</td>
+                            <td className="numeric">{record.overtimeDuration.toFixed(2)}</td>
+                            <td className="numeric">
+                              <strong style={{ color: '#2563eb', fontSize: '15px' }}>
+                                ₹{record.finalSalary.toFixed(2)}
+                              </strong>
+                            </td>
+                            <td>
+                              <span
+                                className={`badge badge-${
+                                  record.attendanceStatus?.includes('Absent')
+                                    ? 'danger'
+                                    : 'success'
+                                }`}
+                              >
+                                {record.attendanceStatus}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               );
             })}
+          </div>
+
+          {/* Refresh Button */}
+          <div className="action-buttons">
+            <button
+              onClick={loadReports}
+              className="btn btn-secondary"
+              title="Refresh the report data"
+            >
+              🔄 Refresh Report
+            </button>
           </div>
         </div>
       </div>
