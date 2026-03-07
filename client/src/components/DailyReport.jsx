@@ -23,7 +23,7 @@ export default function DailyReport({ dailyReports }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                 <h4 style={{ margin: 0 }}>📆 <strong>{date}</strong></h4>
                 <div style={{ fontSize: '13px', color: '#64748b' }}>
-                  {presentCount} Present | Total: <strong style={{ color: '#2563eb' }}>₹{totalSalary.toFixed(2)}</strong>
+                  {presentCount} Present | Total: <strong style={{ color: '#2563eb' }}>Rs. {totalSalary.toFixed(2)}</strong>
                 </div>
               </div>
               <div className="table-responsive">
@@ -55,19 +55,19 @@ export default function DailyReport({ dailyReports }) {
                         <td className="numeric">{record.lateDuration.toFixed(2)}</td>
                         <td className="numeric">{record.earlyLeaveDuration.toFixed(2)}</td>
                         <td className="numeric">{record.overtimeDuration.toFixed(2)}</td>
-                        <td className="numeric">₹{record.baseSalary.toFixed(2)}</td>
+                        <td className="numeric">Rs. {record.baseSalary.toFixed(2)}</td>
                         <td className="numeric" style={{ color: '#ef4444' }}>
-                          -₹{record.lateDeduction.toFixed(2)}
+                          -Rs. {record.lateDeduction.toFixed(2)}
                         </td>
                         <td className="numeric" style={{ color: '#ef4444' }}>
-                          -₹{record.earlyLeaveDeduction.toFixed(2)}
+                          -Rs. {record.earlyLeaveDeduction.toFixed(2)}
                         </td>
                         <td className="numeric" style={{ color: '#10b981' }}>
-                          +₹{record.overtimePayment.toFixed(2)}
+                          +Rs. {record.overtimePayment.toFixed(2)}
                         </td>
                         <td className="numeric">
                           <strong style={{ color: '#2563eb', fontSize: '15px' }}>
-                            ₹{record.finalSalary.toFixed(2)}
+                            Rs. {record.finalSalary.toFixed(2)}
                           </strong>
                         </td>
                         <td>

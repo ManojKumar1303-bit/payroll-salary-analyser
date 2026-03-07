@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import UploadPage from './pages/UploadPage';
 import DailyReportsPage from './pages/DailyReportsPage';
 import SummaryReportPage from './pages/SummaryReportPage';
+import EmployeeSettingsPage from './pages/EmployeeSettingsPage';
 
 // clearSessionData API call used to reset backend state when app loads
 import { clearSessionData } from './services/api';
@@ -35,6 +36,7 @@ function App() {
 
       <main className="main-content">
         {currentPage === 'upload' && <UploadPage />}
+        {currentPage === 'employee-settings' && <EmployeeSettingsPage />}
         {currentPage === 'daily-reports' && <DailyReportsPage />}
         {currentPage === 'summary-report' && <SummaryReportPage />}
       </main>

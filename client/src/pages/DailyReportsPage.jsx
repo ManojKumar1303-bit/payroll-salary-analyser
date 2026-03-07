@@ -98,12 +98,12 @@ export default function DailyReportsPage() {
             </div>
             <div className="stat-box">
               <h5>Total Salary</h5>
-              <div className="stat-value">₹{totalSalary.toFixed(0)}</div>
+              <div className="stat-value">Rs. {totalSalary.toFixed(0)}</div>
             </div>
             <div className="stat-box">
               <h5>Avg per Day</h5>
               <div className="stat-value">
-                ₹{(totalSalary / reportData.dailyReports.length).toFixed(0)}
+                Rs. {(totalSalary / reportData.dailyReports.length).toFixed(0)}
               </div>
             </div>
           </div>
@@ -113,13 +113,13 @@ export default function DailyReportsPage() {
             <strong>⚙️ Salary Rules Applied</strong>
             <ul style={{ marginTop: '10px' }}>
               <li>
-                <strong>Late Penalty:</strong> ₹{reportData.penalties.latePenalty}/hour
+                <strong>Late Penalty:</strong> Rs. {reportData.penalties.latePenalty}/hour
               </li>
               <li>
-                <strong>Early Leave Penalty:</strong> ₹{reportData.penalties.earlyLeavePenalty}/hour
+                <strong>Early Leave Penalty:</strong> Rs. {reportData.penalties.earlyLeavePenalty}/hour
               </li>
               <li>
-                <strong>Overtime Pay:</strong> ₹{reportData.overtimeRate}/hour
+                <strong>Overtime Pay:</strong> Rs. {reportData.overtimeRate}/hour
               </li>
             </ul>
           </div>
@@ -137,7 +137,7 @@ export default function DailyReportsPage() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                     <h4 style={{ margin: 0 }}>📆 <strong>{date}</strong></h4>
                     <div style={{ fontSize: '13px', color: '#64748b' }}>
-                      {presentCount} Present | Total: <strong style={{ color: '#2563eb' }}>₹{daySalary.toFixed(2)}</strong>
+                      {presentCount} Present | Total: <strong style={{ color: '#2563eb' }}>Rs. {daySalary.toFixed(2)}</strong>
                     </div>
                   </div>
                   <div className="table-responsive">
@@ -165,7 +165,7 @@ export default function DailyReportsPage() {
                             <td className="numeric">{record.overtimeDuration.toFixed(2)}</td>
                             <td className="numeric">
                               <strong style={{ color: '#2563eb', fontSize: '15px' }}>
-                                ₹{record.finalSalary.toFixed(2)}
+                                Rs. {record.finalSalary.toFixed(2)}
                               </strong>
                             </td>
                             <td>

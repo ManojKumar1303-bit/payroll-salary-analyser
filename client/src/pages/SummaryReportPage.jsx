@@ -111,7 +111,7 @@ export default function SummaryReportPage() {
       <div className="summary-stats">
         <div className="stat-box">
           <h5>Total Salary</h5>
-          <div className="stat-value">₹{totalGrossSalary.toFixed(0)}</div>
+          <div className="stat-value">Rs. {totalGrossSalary.toFixed(0)}</div>
         </div>
         <div className="stat-box">
           <h5>Employees</h5>
@@ -119,7 +119,7 @@ export default function SummaryReportPage() {
         </div>
         <div className="stat-box">
           <h5>Avg per Employee</h5>
-          <div className="stat-value">₹{(totalGrossSalary / reportData.summary.length).toFixed(0)}</div>
+          <div className="stat-value">Rs. {(totalGrossSalary / reportData.summary.length).toFixed(0)}</div>
         </div>
         <div className="stat-box">
           <h5>Salary Paid</h5>
@@ -158,13 +158,13 @@ export default function SummaryReportPage() {
             <strong>⚙️ Salary Rules Applied</strong>
             <ul style={{ marginTop: '10px' }}>
               <li>
-                <strong>Late Penalty:</strong> ₹{reportData.penalties.latePenalty}/hour
+                <strong>Late Penalty:</strong> Rs. {reportData.penalties.latePenalty}/hour
               </li>
               <li>
-                <strong>Early Leave Penalty:</strong> ₹{reportData.penalties.earlyLeavePenalty}/hour
+                <strong>Early Leave Penalty:</strong> Rs. {reportData.penalties.earlyLeavePenalty}/hour
               </li>
               <li>
-                <strong>Overtime Pay:</strong> ₹{reportData.overtimeRate}/hour
+                <strong>Overtime Pay:</strong> Rs. {reportData.overtimeRate}/hour
               </li>
             </ul>
           </div>
@@ -211,7 +211,7 @@ export default function SummaryReportPage() {
                     <td className="numeric">{emp.totalOvertimeDuration.toFixed(2)}</td>
                     <td className="numeric">
                       <strong style={{ fontSize: '15px', color: '#2563eb' }}>
-                        ₹{emp.totalSalary.toFixed(2)}
+                        Rs. {emp.totalSalary.toFixed(2)}
                       </strong>
                     </td>
                     <td className="checkbox-cell">

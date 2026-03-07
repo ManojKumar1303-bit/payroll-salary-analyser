@@ -6,6 +6,8 @@ import { dirname } from 'path';
 import { mkdir } from 'fs/promises';
 import dotenv from 'dotenv';
 import uploadRoutes from './routes/uploadRoutes.js';
+import employeeRoutes from './routes/employeeRoutes.js';
+import { connectDB } from './db/connection.js';
 
 // load environment variables from .env file if present
 dotenv.config();
@@ -19,7 +21,7 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || '*',
+    origin: ["http://localhost:3000", "http://localhost:5173"],
     credentials: true,
   })
 );
@@ -30,8 +32,17 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 const uploadsDir = path.join(__dirname, 'uploads');
 await mkdir(uploadsDir, { recursive: true });
 
+// Connect to MongoDB
+try {
+  await connectDB();
+} catch (error) {
+  console.error('Failed to connect to MongoDB:', error.message);
+  console.error('Application will continue with in-memory employee storage only');
+}
+
 // Routes
 app.use('/api', uploadRoutes);
+app.use('/api/employees', employeeRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -65,5 +76,11 @@ app.listen(PORT, () => {
     console.log('  GET  /api/reports - Get salary reports');
     console.log('  GET  /api/export-report - Export reports as Excel');
     console.log('  POST /api/clear - Clear session data');
+    console.log('Employee Management:');
+    console.log('  GET  /api/employees - Get all employees');
+    console.log('  POST /api/employees - Create new employee');
+    console.log('  PUT  /api/employees/:employeeId - Update employee');
+    console.log('  DELETE /api/employees/:employeeId - Delete employee');
+    console.log('  POST /api/employees/bulk-upsert - Bulk create/update employees');
   }
 });

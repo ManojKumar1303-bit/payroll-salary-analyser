@@ -93,12 +93,22 @@ export const calculateDailySalary = (
   
   // Use the pre-calculated Overtime Duration from Excel (already converted to decimal hours by parser)
   // Ensure the value is valid and never negative
-  const overtimeDurationHours = Math.max(0, Number(record.overtimeDuration) || 0);
+  // IMPORTANT: If overtime rate is 0 or undefined, ignore overtime completely
+  let overtimeDurationHours = Math.max(0, Number(record.overtimeDuration) || 0);
+  
+  // If overtime rate is 0 or less, completely disregard overtime
+  if (!overtimeRate || overtimeRate <= 0) {
+    overtimeDurationHours = 0;
+  }
 
   // Calculate deductions and additions
   const lateDeduction = lateDurationHours * latePenalty;
   const earlyLeaveDeduction = earlyLeaveDurationHours * earlyLeavePenalty;
-  const overtimePayment = overtimeDurationHours * overtimeRate;
+  
+  // Only calculate overtime payment if rate is greater than 0
+  const overtimePayment = overtimeRate && overtimeRate > 0 
+    ? overtimeDurationHours * overtimeRate 
+    : 0;
 
   // Final Salary = Base Salary - Late Deduction - Early Leave Deduction + Overtime Payment
   const finalSalary =
@@ -190,6 +200,60 @@ export const processDailyRecords = (
     const salary = employeeSalaries[record.employeeId] || 0;
     return calculateDailySalary(record, salary, penalties, overtimeRate);
   });
+};
+
+/**
+ * Processes attendance records using employee data from database
+ * This function fetches employee configurations and calculates salaries
+ * Returns calculated salaries and list of skipped employees (not in database)
+ * 
+ * @param {Array} records - Attendance records from Excel
+ * @param {Array} employeeDocuments - Employee documents from MongoDB (keyed by employeeId)
+ * @param {Object} penalties - Fallback penalties { latePenalty, earlyLeavePenalty }
+ * @param {number} overtimeRate - Fallback overtime rate
+ * @returns {Object} { dailySalaries, skippedEmployees }
+ */
+export const processDailyRecordsFromDB = (
+  records,
+  employeeDocuments,
+  penalties,
+  overtimeRate
+) => {
+  const dailySalaries = [];
+  const skippedEmployees = new Set();
+
+  records.forEach((record) => {
+    const employee = employeeDocuments[record.employeeId];
+
+    // If employee not found in database, skip this record
+    if (!employee) {
+      skippedEmployees.add(record.employeeId);
+      return;
+    }
+
+    // Use employee database values
+    const employeePenalties = {
+      latePenalty: employee.latePenalty || penalties?.latePenalty || 50,
+      earlyLeavePenalty: employee.earlyLeavePenalty || penalties?.earlyLeavePenalty || 50,
+    };
+
+    const employeeOvertimeRate = employee.overtimeRate || overtimeRate || 100;
+
+    // Calculate salary using employee's configured daily salary
+    const salaryRecord = calculateDailySalary(
+      record,
+      employee.dailySalary,
+      employeePenalties,
+      employeeOvertimeRate
+    );
+
+    dailySalaries.push(salaryRecord);
+  });
+
+  return {
+    dailySalaries,
+    skippedEmployees: Array.from(skippedEmployees),
+  };
 };
 
 /**

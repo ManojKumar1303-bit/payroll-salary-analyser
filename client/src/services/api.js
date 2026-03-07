@@ -32,12 +32,17 @@ export const getUploadedData = async () => {
 
 /**
  * Calculate salary based on settings
+ * @param {Object} employeeSalaries - Manual employee salary mapping (legacy)
+ * @param {Object} penalties - Penalty settings
+ * @param {number} overtimeRate - Overtime rate
+ * @param {boolean} useDatabase - If true, use database employee configuration
  */
-export const calculateSalary = async (employeeSalaries, penalties, overtimeRate) => {
+export const calculateSalary = async (employeeSalaries, penalties, overtimeRate, useDatabase = false) => {
   return apiClient.post('/calculate-salary', {
     employeeSalaries,
     penalties,
     overtimeRate,
+    useDatabase,
   });
 };
 
@@ -62,6 +67,52 @@ export const exportSalaryReport = async () => {
  */
 export const clearSessionData = async () => {
   return apiClient.post('/clear');
+};
+
+// ============================================
+// EMPLOYEE MANAGEMENT API FUNCTIONS
+// ============================================
+
+/**
+ * Get all employees from database
+ */
+export const getAllEmployees = async () => {
+  return apiClient.get('/employees');
+};
+
+/**
+ * Get a single employee by employeeId
+ */
+export const getEmployeeById = async (employeeId) => {
+  return apiClient.get(`/employees/${employeeId}`);
+};
+
+/**
+ * Create a new employee
+ */
+export const createEmployee = async (employeeData) => {
+  return apiClient.post('/employees', employeeData);
+};
+
+/**
+ * Update employee by employeeId
+ */
+export const updateEmployee = async (employeeId, employeeData) => {
+  return apiClient.put(`/employees/${employeeId}`, employeeData);
+};
+
+/**
+ * Delete employee by employeeId (permanent deletion)
+ */
+export const deleteEmployee = async (employeeId) => {
+  return apiClient.delete(`/employees/${employeeId}`);
+};
+
+/**
+ * Bulk create or update employees
+ */
+export const bulkUpsertEmployees = async (employees) => {
+  return apiClient.post('/employees/bulk-upsert', { employees });
 };
 
 export default apiClient;

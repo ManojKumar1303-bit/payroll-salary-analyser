@@ -101,12 +101,12 @@ export default function ReportsPage() {
               <div className="settings-info">
                 <strong>Salary Rules Applied:</strong>
                 <ul>
-                  <li>Late Penalty: ₹{reportData.penalties.latePenalty}/hour</li>
+                  <li>Late Penalty: Rs. {reportData.penalties.latePenalty}/hour</li>
                   <li>
-                    Early Leave Penalty: ₹
+                    Early Leave Penalty: Rs.
                     {reportData.penalties.earlyLeavePenalty}/hour
                   </li>
-                  <li>Overtime Pay: ₹{reportData.overtimeRate}/hour</li>
+                  <li>Overtime Pay: Rs. {reportData.overtimeRate}/hour</li>
                 </ul>
               </div>
             </div>

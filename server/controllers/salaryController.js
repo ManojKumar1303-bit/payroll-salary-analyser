@@ -1,21 +1,22 @@
 import {
   processDailyRecords,
+  processDailyRecordsFromDB,
   generateSalarySummary,
 } from '../services/salaryCalculator.js';
 import { getSessionData, setSessionData } from './uploadController.js';
+import Employee from '../models/Employee.js';
 import ExcelJS from 'exceljs';
 import { decimalHoursToTimeString } from '../utils/timeConverter.js';
 
 /**
  * Calculate salary based on uploaded files and salary settings
+ * Supports both:
+ * 1. Manual employee salary entry (legacy) - when employeeSalaries is provided
+ * 2. Database-driven employee configuration - when useDatabase flag is true
  */
-export const calculateSalary = (req, res) => {
+export const calculateSalary = async (req, res) => {
   try {
-    const { employeeSalaries, penalties, overtimeRate } = req.body;
-
-    if (!employeeSalaries || Object.keys(employeeSalaries).length === 0) {
-      return res.status(400).json({ error: 'Employee salaries are required' });
-    }
+    const { employeeSalaries, penalties, overtimeRate, useDatabase } = req.body;
 
     const sessionData = getSessionData();
 
@@ -34,18 +35,67 @@ export const calculateSalary = (req, res) => {
       recordsByDate[record.date].push(record);
     });
 
-    // Calculate salary for each day
-    const dailyReports = [];
-    Object.keys(recordsByDate).forEach((date) => {
-      const dayRecords = recordsByDate[date];
-      const dailySalaries = processDailyRecords(
-        dayRecords,
-        employeeSalaries,
-        penalties,
-        overtimeRate
-      );
-      dailyReports.push(dailySalaries);
-    });
+    let dailyReports = [];
+    let skippedEmployees = [];
+
+    // Use database-driven employee configuration
+    if (useDatabase) {
+      try {
+        // Fetch all active employees from database
+        const employeeDocs = await Employee.find({ isActive: true });
+        
+        // Create a map for quick lookup
+        const employeeMap = {};
+        employeeDocs.forEach((emp) => {
+          employeeMap[emp.employeeId] = {
+            dailySalary: emp.dailySalary,
+            latePenalty: emp.latePenalty,
+            earlyLeavePenalty: emp.earlyLeavePenalty,
+            overtimeRate: emp.overtimeRate,
+          };
+        });
+
+        // Calculate salary for each day
+        Object.keys(recordsByDate).forEach((date) => {
+          const dayRecords = recordsByDate[date];
+          const result = processDailyRecordsFromDB(
+            dayRecords,
+            employeeMap,
+            penalties,
+            overtimeRate
+          );
+          dailyReports.push(result.dailySalaries);
+          skippedEmployees.push(...result.skippedEmployees);
+        });
+
+        // Remove duplicate skipped employees
+        skippedEmployees = [...new Set(skippedEmployees)];
+      } catch (error) {
+        console.error('Error fetching employees from database:', error);
+        return res.status(500).json({
+          error: 'Failed to fetch employee configuration from database',
+        });
+      }
+    } else {
+      // Legacy: Use manually provided employee salaries
+      if (!employeeSalaries || Object.keys(employeeSalaries).length === 0) {
+        return res.status(400).json({
+          error: 'Employee salaries are required when not using database',
+        });
+      }
+
+      // Calculate salary for each day using manual entry
+      Object.keys(recordsByDate).forEach((date) => {
+        const dayRecords = recordsByDate[date];
+        const dailySalaries = processDailyRecords(
+          dayRecords,
+          employeeSalaries,
+          penalties,
+          overtimeRate
+        );
+        dailyReports.push(dailySalaries);
+      });
+    }
 
     // Generate summary
     const summary = generateSalarySummary(dailyReports);
@@ -57,6 +107,8 @@ export const calculateSalary = (req, res) => {
       summary,
       penalties,
       overtimeRate,
+      useDatabase,
+      skippedEmployees,
       calculationDate: new Date().toISOString(),
     };
 
@@ -67,6 +119,7 @@ export const calculateSalary = (req, res) => {
       message: 'Salary calculated successfully',
       dailyReports,
       summary,
+      skippedEmployees: skippedEmployees.length > 0 ? skippedEmployees : undefined,
     });
   } catch (error) {
     console.error('Error in calculateSalary:', error);
@@ -95,6 +148,8 @@ export const getReports = (req, res) => {
     summary: sessionData.summary,
     penalties: sessionData.penalties,
     overtimeRate: sessionData.overtimeRate,
+    useDatabase: sessionData.useDatabase,
+    skippedEmployees: sessionData.skippedEmployees || [],
   });
 };
 

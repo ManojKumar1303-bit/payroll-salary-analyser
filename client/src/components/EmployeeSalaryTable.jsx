@@ -71,11 +71,11 @@ export default function EmployeeSalaryTable({ employees, onSalarySubmit, isLoadi
           </div>
           <div className="stat-box">
             <h5>Avg Daily Salary</h5>
-            <div className="stat-value">₹{averageDaily.toFixed(0)}</div>
+            <div className="stat-value">Rs. {averageDaily.toFixed(0)}</div>
           </div>
           <div className="stat-box">
             <h5>Est. Monthly</h5>
-            <div className="stat-value">₹{totalMonthly.toFixed(0)}</div>
+            <div className="stat-value">Rs. {totalMonthly.toFixed(0)}</div>
           </div>
         </div>
 
@@ -87,7 +87,7 @@ export default function EmployeeSalaryTable({ employees, onSalarySubmit, isLoadi
                   <th>ID</th>
                   <th>Employee Name</th>
                   <th>Department</th>
-                  <th className="numeric">Daily Salary (₹)</th>
+                  <th className="numeric">Daily Salary (Rs.)</th>
                   <th className="numeric">Est. Monthly</th>
                 </tr>
               </thead>
@@ -119,7 +119,7 @@ export default function EmployeeSalaryTable({ employees, onSalarySubmit, isLoadi
                       </td>
                       <td className="numeric">
                         <strong style={{ color: '#2563eb' }}>
-                          ₹{monthly.toFixed(0)}
+                          Rs. {monthly.toFixed(0)}
                         </strong>
                       </td>
                     </tr>

@@ -31,6 +31,15 @@ export default function Navbar({ currentPage, onPageChange, isDarkTheme, onTheme
           </li>
           <li>
             <button
+              className={`nav-link ${currentPage === 'employee-settings' ? 'active' : ''}`}
+              onClick={() => handleNavClick('employee-settings')}
+              title="Manage employee salary settings"
+            >
+              👥 Employee Settings
+            </button>
+          </li>
+          <li>
+            <button
               className={`nav-link ${currentPage === 'daily-reports' ? 'active' : ''}`}
               onClick={() => handleNavClick('daily-reports')}
               title="View daily salary reports"

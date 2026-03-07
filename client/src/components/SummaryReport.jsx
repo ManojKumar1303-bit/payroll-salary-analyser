@@ -31,7 +31,7 @@ export default function SummaryReport({ summary, onExport, isExporting }) {
           </div>
           <div className="stat-box">
             <h5>Total Salary</h5>
-            <p className="stat-value">₹{totalSalary.toFixed(2)}</p>
+            <p className="stat-value">Rs. {totalSalary.toFixed(2)}</p>
           </div>
         </div>
 
@@ -62,7 +62,7 @@ export default function SummaryReport({ summary, onExport, isExporting }) {
                   <td>{emp.totalEarlyLeaveDuration.toFixed(2)}</td>
                   <td>{emp.totalOvertimeDuration.toFixed(2)}</td>
                   <td>
-                    <strong>₹{emp.totalSalary.toFixed(2)}</strong>
+                    <strong>Rs. {emp.totalSalary.toFixed(2)}</strong>
                   </td>
                 </tr>
               ))}

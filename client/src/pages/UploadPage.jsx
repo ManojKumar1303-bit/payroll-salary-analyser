@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import FileUpload from '../components/FileUpload';
-import SalarySettings from '../components/SalarySettings';
-import EmployeeSalaryTable from '../components/EmployeeSalaryTable';
 import DailyReport from '../components/DailyReport';
 import SummaryReport from '../components/SummaryReport';
 import {
@@ -13,19 +11,15 @@ import {
 export default function UploadPage() {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [uploadedEmployees, setUploadedEmployees] = useState([]);
-  const [settings, setSettings] = useState({
-    latePenalty: 50,
-    earlyLeavePenalty: 50,
-    overtimeRate: 100,
-  });
   const [dailyReports, setDailyReports] = useState([]);
   const [summary, setSummary] = useState([]);
   const [isCalculating, setIsCalculating] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [skippedEmployees, setSkippedEmployees] = useState([]);
 
-  const handleUploadSuccess = (responseData) => {
+  const handleUploadSuccess = async (responseData) => {
     // Append new files to existing list
     const newFiles = responseData.fileNames.map(name => ({ name, uploadedAt: new Date() }));
     setUploadedFiles(prevFiles => [...prevFiles, ...newFiles]);
@@ -37,34 +31,37 @@ export default function UploadPage() {
     setSummary([]);
     setError('');
     setSuccessMessage('');
+
+    // Automatically calculate using Employee Settings after upload
+    await calculateUsingEmployeeSettings();
   };
 
-  const handleSettingsChange = (newSettings) => {
-    setSettings(newSettings);
-  };
-
-  const handleSalarySubmit = async (employeeSalaries) => {
+  const calculateUsingEmployeeSettings = async () => {
     setIsCalculating(true);
     setError('');
     setSuccessMessage('');
 
     try {
       const response = await calculateSalary(
-        employeeSalaries,
-        {
-          latePenalty: settings.latePenalty,
-          earlyLeavePenalty: settings.earlyLeavePenalty,
-        },
-        settings.overtimeRate
+        {},
+        {}, // No settings passed - using employee-specific configuration
+        null,
+        true // Use database employee configuration
       );
 
       setDailyReports(response.data.dailyReports);
       setSummary(response.data.summary);
-      setSuccessMessage('Salary calculated successfully!');
+      setSkippedEmployees(response.data.skippedEmployees || []);
+
+      if (response.data.skippedEmployees && response.data.skippedEmployees.length > 0) {
+        setError(`⚠️ ${response.data.skippedEmployees.length} employee(s) were skipped because they are not configured in Employee Settings: ${response.data.skippedEmployees.join(', ')}`);
+      } else {
+        setSuccessMessage('Salary calculated successfully using Employee Settings!');
+      }
     } catch (err) {
       setError(
         err.response?.data?.error ||
-        'Failed to calculate salary. Please try again.'
+        'Failed to calculate salary. Please check Employee Settings and try again.'
       );
     } finally {
       setIsCalculating(false);
@@ -96,7 +93,6 @@ export default function UploadPage() {
     }
   };
 
-  // called from the "Start New Calculation" / clear button
   const handleClear = async () => {
     if (window.confirm('Are you sure you want to clear all data and start over?')) {
       try {
@@ -105,12 +101,7 @@ export default function UploadPage() {
         setUploadedEmployees([]);
         setDailyReports([]);
         setSummary([]);
-        // revert settings to defaults as well
-        setSettings({
-          latePenalty: 50,
-          earlyLeavePenalty: 50,
-          overtimeRate: 100,
-        });
+        setSkippedEmployees([]);
         setError('');
         setSuccessMessage('Data cleared. Ready for new upload.');
       } catch (err) {
@@ -124,8 +115,8 @@ export default function UploadPage() {
   };
 
   // Progress indicators
-  const currentStep = summary.length > 0 ? 4 : (dailyReports.length > 0 ? 3 : (uploadedEmployees.length > 0 ? 2 : 1));
-  const steps = ['Upload', 'Configure', 'Calculate', 'Review'];
+  const currentStep = summary.length > 0 ? 2 : 1;
+  const steps = ['Upload', 'Review'];
 
   return (
     <div className="container">
@@ -177,19 +168,7 @@ export default function UploadPage() {
       {/* Step 1: File Upload */}
       <FileUpload onUploadSuccess={handleUploadSuccess} uploadedFiles={uploadedFiles} />
 
-      {/* Step 2: Salary Settings */}
-      <SalarySettings onSettingsChange={handleSettingsChange} />
-
-      {/* Step 3: Employee Salary Setup */}
-      {uploadedEmployees.length > 0 && (
-        <EmployeeSalaryTable
-          employees={uploadedEmployees}
-          onSalarySubmit={handleSalarySubmit}
-          isLoading={isCalculating}
-        />
-      )}
-
-      {/* Step 4: Review Reports */}
+      {/* Step 2: Review Reports */}
       {dailyReports.length > 0 && <DailyReport dailyReports={dailyReports} />}
 
       {summary.length > 0 && (
