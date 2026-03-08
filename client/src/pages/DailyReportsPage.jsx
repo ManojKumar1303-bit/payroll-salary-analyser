@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { getReports } from '../services/api';
+import Card from '../components/Card';
+import Loader from '../components/Loader';
+import Alert from '../components/Alert';
+import DailyReport from '../components/DailyReport';
+import { RefreshCw, FileText } from 'lucide-react';
 
 export default function DailyReportsPage() {
   const [reportData, setReportData] = useState(null);
@@ -19,41 +24,24 @@ export default function DailyReportsPage() {
       const response = await getReports();
       setReportData(response.data);
     } catch (err) {
-      setError(
-        err.response?.data?.error ||
-        'Failed to load reports. Please upload and calculate salary first.'
-      );
-      setReportData(null);
+      setError(err.response?.data?.error || 'Failed to load reports. Please upload and calculate salary first.');
     } finally {
       setIsLoading(false);
     }
   };
 
   if (isLoading) {
-    return (
-      <div className="container">
-        <div className="loading-message">
-          <div className="spinner" />
-          <span>Loading daily reports...</span>
-        </div>
-      </div>
-    );
+    return <Loader fullPage text="Loading daily reports..." />;
   }
 
   if (error) {
-    return (
-      <div className="container">
-        <div className="alert alert-danger">⚠️ {error}</div>
-      </div>
-    );
+    return <div style={{ maxWidth: '1200px', margin: '0 auto' }}><Alert type="danger" message={error} /></div>;
   }
 
   if (!reportData || !reportData.dailyReports || reportData.dailyReports.length === 0) {
     return (
-      <div className="container">
-        <div className="alert alert-info">
-          💡 No daily reports available. Please upload and calculate salary first.
-        </div>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <Alert type="success" message="No daily reports available. Please upload attendance files and calculate salary first." />
       </div>
     );
   }
@@ -63,144 +51,36 @@ export default function DailyReportsPage() {
   }, 0);
 
   return (
-    <div className="container">
-      <div className="card">
-        <div className="card-header">
-          <h3>📅 Daily Salary Reports</h3>
-          <p>Detailed salary breakdown for each working day from attendance records</p>
+    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <FileText className="text-primary" /> Daily Salary Reports
+        </h2>
+        <button onClick={loadReports} className="btn btn-secondary">
+          <RefreshCw size={16} /> Refresh Report
+        </button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ backgroundColor: 'white', padding: '1.25rem', borderRadius: 'var(--border-radius)', border: '1px solid var(--border-color)' }}>
+          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>Upload Date</div>
+          <div style={{ fontSize: '1.125rem', fontWeight: 600 }}>{new Date(reportData.uploadDate).toLocaleDateString()}</div>
         </div>
-        <div className="card-body">
-          {/* Report Info */}
-          <div className="report-info">
-            <div className="info-item">
-              <strong>📅 Upload Date</strong>
-              <div>{new Date(reportData.uploadDate).toLocaleDateString()}</div>
-            </div>
-            <div className="info-item">
-              <strong>📁 Files Processed</strong>
-              <div>{reportData.filesProcessed}</div>
-            </div>
-            <div className="info-item">
-              <strong>👥 Total Employees</strong>
-              <div>{reportData.totalEmployees}</div>
-            </div>
-            <div className="info-item">
-              <strong>📆 Calculation Date</strong>
-              <div>{new Date(reportData.calculationDate).toLocaleDateString()}</div>
-            </div>
-          </div>
-
-          {/* Summary Stats */}
-          <div className="summary-stats">
-            <div className="stat-box">
-              <h5>Total Days</h5>
-              <div className="stat-value">{reportData.dailyReports.length}</div>
-            </div>
-            <div className="stat-box">
-              <h5>Total Salary</h5>
-              <div className="stat-value">Rs. {totalSalary.toFixed(0)}</div>
-            </div>
-            <div className="stat-box">
-              <h5>Avg per Day</h5>
-              <div className="stat-value">
-                Rs. {(totalSalary / reportData.dailyReports.length).toFixed(0)}
-              </div>
-            </div>
-          </div>
-
-          {/* Settings Info */}
-          <div className="settings-summary">
-            <strong>⚙️ Salary Rules Applied</strong>
-            <ul style={{ marginTop: '10px' }}>
-              <li>
-                <strong>Late Penalty:</strong> Rs. {reportData.penalties.latePenalty}/hour
-              </li>
-              <li>
-                <strong>Early Leave Penalty:</strong> Rs. {reportData.penalties.earlyLeavePenalty}/hour
-              </li>
-              <li>
-                <strong>Overtime Pay:</strong> Rs. {reportData.overtimeRate}/hour
-              </li>
-            </ul>
-          </div>
-
-          {/* Daily Reports */}
-          <div style={{ marginTop: '24px' }}>
-            {reportData.dailyReports.map((dayReport, dayIndex) => {
-              // Get date from first record in the day
-              const date = dayReport[0]?.date || `Day ${dayIndex + 1}`;
-              const daySalary = dayReport.reduce((sum, r) => sum + r.finalSalary, 0);
-              const presentCount = dayReport.filter(r => !r.attendanceStatus?.includes('Absent')).length;
-
-              return (
-                <div key={dayIndex} className="daily-report-section">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                    <h4 style={{ margin: 0 }}>📆 <strong>{date}</strong></h4>
-                    <div style={{ fontSize: '13px', color: '#64748b' }}>
-                      {presentCount} Present | Total: <strong style={{ color: '#2563eb' }}>Rs. {daySalary.toFixed(2)}</strong>
-                    </div>
-                  </div>
-                  <div className="table-responsive">
-                    <table className="table table-sm table-striped">
-                      <thead>
-                        <tr>
-                          <th>ID</th>
-                          <th>Employee Name</th>
-                          <th>Shift</th>
-                          <th className="numeric">Late (hrs)</th>
-                          <th className="numeric">Early (hrs)</th>
-                          <th className="numeric">OT (hrs)</th>
-                          <th className="numeric">Final Salary</th>
-                          <th>Status</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {dayReport.map((record, idx) => (
-                          <tr key={idx}>
-                            <td><strong>{record.employeeId}</strong></td>
-                            <td>{record.firstName} {record.lastName}</td>
-                            <td>{record.shift}</td>
-                            <td className="numeric">{record.lateDuration.toFixed(2)}</td>
-                            <td className="numeric">{record.earlyLeaveDuration.toFixed(2)}</td>
-                            <td className="numeric">{record.overtimeDuration.toFixed(2)}</td>
-                            <td className="numeric">
-                              <strong style={{ color: '#2563eb', fontSize: '15px' }}>
-                                Rs. {record.finalSalary.toFixed(2)}
-                              </strong>
-                            </td>
-                            <td>
-                              <span
-                                className={`badge badge-${
-                                  record.attendanceStatus?.includes('Absent')
-                                    ? 'danger'
-                                    : 'success'
-                                }`}
-                              >
-                                {record.attendanceStatus}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Refresh Button */}
-          <div className="action-buttons">
-            <button
-              onClick={loadReports}
-              className="btn btn-secondary"
-              title="Refresh the report data"
-            >
-              🔄 Refresh Report
-            </button>
-          </div>
+        <div style={{ backgroundColor: 'white', padding: '1.25rem', borderRadius: 'var(--border-radius)', border: '1px solid var(--border-color)' }}>
+          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>Total Employees</div>
+          <div style={{ fontSize: '1.125rem', fontWeight: 600 }}>{reportData.totalEmployees}</div>
+        </div>
+        <div style={{ backgroundColor: 'white', padding: '1.25rem', borderRadius: 'var(--border-radius)', border: '1px solid var(--border-color)' }}>
+          <div style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)', marginBottom: '0.25rem' }}>Total Days</div>
+          <div style={{ fontSize: '1.125rem', fontWeight: 600 }}>{reportData.dailyReports.length}</div>
+        </div>
+        <div style={{ backgroundColor: 'var(--color-primary)', color: 'white', padding: '1.25rem', borderRadius: 'var(--border-radius)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ fontSize: '0.875rem', color: '#CCFBF1', marginBottom: '0.25rem' }}>Total Salary</div>
+          <div style={{ fontSize: '1.25rem', fontWeight: 700 }}>Rs. {totalSalary.toFixed(0)}</div>
         </div>
       </div>
+
+      <DailyReport dailyReports={reportData.dailyReports} />
     </div>
   );
 }

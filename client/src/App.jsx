@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import Navbar from './components/Navbar';
+import Sidebar from './components/Sidebar';
+import Header from './components/Navbar';
+import Footer from './components/Footer';
 import UploadPage from './pages/UploadPage';
 import DailyReportsPage from './pages/DailyReportsPage';
 import SummaryReportPage from './pages/SummaryReportPage';
@@ -11,7 +13,6 @@ import { clearSessionData } from './services/api';
 
 function App() {
   const [currentPage, setCurrentPage] = useState('upload');
-  const [isDarkTheme, setIsDarkTheme] = useState(false);
 
   // clear any stale session data on initial mount so every user starts with a clean slate
   useEffect(() => {
@@ -26,26 +27,22 @@ function App() {
     reset();
   }, []);
 
-  const toggleTheme = () => {
-    setIsDarkTheme(!isDarkTheme);
-  };
-
   return (
-    <div className={`app ${isDarkTheme ? 'dark-theme' : 'light-theme'}`}>
-      <Navbar currentPage={currentPage} onPageChange={setCurrentPage} isDarkTheme={isDarkTheme} onThemeToggle={toggleTheme} />
+    <div className="app-layout">
+      <Sidebar currentPage={currentPage} onPageChange={setCurrentPage} />
 
-      <main className="main-content">
-        {currentPage === 'upload' && <UploadPage />}
-        {currentPage === 'employee-settings' && <EmployeeSettingsPage />}
-        {currentPage === 'daily-reports' && <DailyReportsPage />}
-        {currentPage === 'summary-report' && <SummaryReportPage />}
-      </main>
+      <div className="main-wrapper">
+        <Header />
 
-      <footer className="footer">
-        <p>
-          © 2026 Kaaraalan Goli Soda and Cattle farm. All rights reserved. Developed and Maintained by Manoj Kumar U.
-        </p>
-      </footer>
+        <main className="main-content">
+          {currentPage === 'upload' && <UploadPage />}
+          {currentPage === 'employee-settings' && <EmployeeSettingsPage />}
+          {currentPage === 'daily-reports' && <DailyReportsPage />}
+          {currentPage === 'summary-report' && <SummaryReportPage />}
+        </main>
+
+        <Footer />
+      </div>
     </div>
   );
 }

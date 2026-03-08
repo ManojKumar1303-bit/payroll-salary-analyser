@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { getReports, exportSalaryReport } from '../services/api';
+import Card from '../components/Card';
+import Loader from '../components/Loader';
+import Alert from '../components/Alert';
+import Table from '../components/Table';
+import { Download, RefreshCw, BarChart3, Users, Banknote, Clock, Calendar } from 'lucide-react';
 
 export default function SummaryReportPage() {
   const [reportData, setReportData] = useState(null);
@@ -22,11 +27,7 @@ export default function SummaryReportPage() {
       const response = await getReports();
       setReportData(response.data);
     } catch (err) {
-      setError(
-        err.response?.data?.error ||
-        'Failed to load reports. Please upload and calculate salary first.'
-      );
-      setReportData(null);
+      setError(err.response?.data?.error || 'Failed to load reports. Please upload and calculate salary first.');
     } finally {
       setIsLoading(false);
     }
@@ -39,8 +40,6 @@ export default function SummaryReportPage() {
 
     try {
       const response = await exportSalaryReport();
-
-      // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -49,7 +48,6 @@ export default function SummaryReportPage() {
       link.click();
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
-
       setSuccessMessage('Report exported successfully!');
     } catch (err) {
       setError('Failed to export report. Please try again.');
@@ -66,30 +64,17 @@ export default function SummaryReportPage() {
   };
 
   if (isLoading) {
-    return (
-      <div className="container">
-        <div className="loading-message">
-          <div className="spinner" />
-          <span>Loading summary report...</span>
-        </div>
-      </div>
-    );
+    return <Loader fullPage text="Loading summary report..." />;
   }
 
   if (error) {
-    return (
-      <div className="container">
-        <div className="alert alert-danger">📋 {error}</div>
-      </div>
-    );
+    return <div style={{ maxWidth: '1200px', margin: '0 auto' }}><Alert type="danger" message={error} /></div>;
   }
 
   if (!reportData || !reportData.summary || reportData.summary.length === 0) {
     return (
-      <div className="container">
-        <div className="alert alert-info">
-          💡 No summary report available. Please upload and calculate salary first.
-        </div>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <Alert type="success" message="No summary report available. Please upload attendance files and calculate salary first." />
       </div>
     );
   }
@@ -101,160 +86,100 @@ export default function SummaryReportPage() {
   const paidCount = Object.values(salaryChecklist).filter(Boolean).length;
 
   return (
-    <div className="container">
-      {error && <div className="alert alert-danger">⚠️ {error}</div>}
-      {successMessage && (
-        <div className="alert alert-success">✓ {successMessage}</div>
-      )}
+    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <BarChart3 className="text-primary" /> Combined Salary Summary
+        </h2>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button onClick={loadReports} className="btn btn-secondary">
+            <RefreshCw size={16} /> Refresh
+          </button>
+          <button onClick={handleExport} disabled={isExporting} className="btn btn-primary">
+            <Download size={16} /> {isExporting ? 'Exporting...' : 'Export Excel'}
+          </button>
+        </div>
+      </div>
+
+      {successMessage && <Alert type="success" message={successMessage} />}
 
       {/* Summary Stats */}
-      <div className="summary-stats">
-        <div className="stat-box">
-          <h5>Total Salary</h5>
-          <div className="stat-value">Rs. {totalGrossSalary.toFixed(0)}</div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ backgroundColor: 'var(--color-primary)', color: 'white', padding: '1.25rem', borderRadius: 'var(--border-radius)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', color: '#CCFBF1' }}>
+            <Banknote size={20} />
+            <span style={{ fontSize: '0.875rem', fontWeight: 600 }}>Total Salary</span>
+          </div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>Rs. {totalGrossSalary.toFixed(0)}</div>
         </div>
-        <div className="stat-box">
-          <h5>Employees</h5>
-          <div className="stat-value">{reportData.summary.length}</div>
+
+        <div style={{ backgroundColor: 'white', padding: '1.25rem', borderRadius: 'var(--border-radius)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', color: 'var(--color-primary)' }}>
+            <Users size={20} />
+            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>Employees</span>
+          </div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{reportData.summary.length}</div>
         </div>
-        <div className="stat-box">
-          <h5>Avg per Employee</h5>
-          <div className="stat-value">Rs. {(totalGrossSalary / reportData.summary.length).toFixed(0)}</div>
+
+        <div style={{ backgroundColor: 'white', padding: '1.25rem', borderRadius: 'var(--border-radius)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', color: 'var(--color-accent)' }}>
+            <Clock size={20} />
+            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>Avg per Employee</span>
+          </div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>Rs. {(totalGrossSalary / reportData.summary.length).toFixed(0)}</div>
         </div>
-        <div className="stat-box">
-          <h5>Salary Paid</h5>
-          <div className="stat-value">{paidCount}/{reportData.summary.length}</div>
+
+        <div style={{ backgroundColor: 'white', padding: '1.25rem', borderRadius: 'var(--border-radius)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', color: 'var(--color-success)' }}>
+            <Calendar size={20} />
+            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>Salary Paid</span>
+          </div>
+          <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{paidCount} / {reportData.summary.length}</div>
         </div>
       </div>
 
-      <div className="card">
-        <div className="card-header">
-          <h3>📊 Combined Salary Summary Report</h3>
-          <p>Comprehensive salary totals across all uploaded attendance files</p>
-        </div>
-        <div className="card-body">
-          {/* Report Info */}
-          <div className="report-info">
-            <div className="info-item">
-              <strong>📅 Upload Date</strong>
-              <div>{new Date(reportData.uploadDate).toLocaleDateString()}</div>
-            </div>
-            <div className="info-item">
-              <strong>📁 Files Processed</strong>
-              <div>{reportData.filesProcessed}</div>
-            </div>
-            <div className="info-item">
-              <strong>👥 Total Employees</strong>
-              <div>{reportData.totalEmployees}</div>
-            </div>
-            <div className="info-item">
-              <strong>📆 Calculation Date</strong>
-              <div>{new Date(reportData.calculationDate).toLocaleDateString()}</div>
-            </div>
-          </div>
-
-          {/* Settings Info */}
-          <div className="settings-summary">
-            <strong>⚙️ Salary Rules Applied</strong>
-            <ul style={{ marginTop: '10px' }}>
-              <li>
-                <strong>Late Penalty:</strong> Rs. {reportData.penalties.latePenalty}/hour
-              </li>
-              <li>
-                <strong>Early Leave Penalty:</strong> Rs. {reportData.penalties.earlyLeavePenalty}/hour
-              </li>
-              <li>
-                <strong>Overtime Pay:</strong> Rs. {reportData.overtimeRate}/hour
-              </li>
-            </ul>
-          </div>
-
-          {/* Duration Summary */}
-          <div className="summary-stats" style={{ marginTop: '24px' }}>
-            <div className="stat-box">
-              <h5>Total Late Hours</h5>
-              <div className="stat-value">{totalLateDuration.toFixed(1)}</div>
-            </div>
-            <div className="stat-box">
-              <h5>Total Early Leave Hours</h5>
-              <div className="stat-value">{totalEarlyLeaveDuration.toFixed(1)}</div>
-            </div>
-            <div className="stat-box">
-              <h5>Total Overtime Hours</h5>
-              <div className="stat-value">{totalOvertimeDuration.toFixed(1)}</div>
-            </div>
-          </div>
-
-          {/* Summary Table */}
-          <div className="table-responsive" style={{ marginTop: '24px' }}>
-            <table className="table table-striped">
-              <thead>
-                <tr>
-                  <th>Employee Name</th>
-                  <th>ID</th>
-                  <th className="numeric">Days</th>
-                  <th className="numeric">Late (hrs)</th>
-                  <th className="numeric">Early (hrs)</th>
-                  <th className="numeric">OT (hrs)</th>
-                  <th className="numeric">Total Salary</th>
-                  <th style={{ textAlign: 'center' }}>✓ Paid</th>
-                </tr>
-              </thead>
-              <tbody>
-                {reportData.summary.map((emp) => (
-                  <tr key={emp.employeeId}>
-                    <td><strong>{emp.firstName} {emp.lastName}</strong></td>
-                    <td>{emp.employeeId}</td>
-                    <td className="numeric">{emp.totalDaysProcessed}</td>
-                    <td className="numeric">{emp.totalLateDuration.toFixed(2)}</td>
-                    <td className="numeric">{emp.totalEarlyLeaveDuration.toFixed(2)}</td>
-                    <td className="numeric">{emp.totalOvertimeDuration.toFixed(2)}</td>
-                    <td className="numeric">
-                      <strong style={{ fontSize: '15px', color: '#2563eb' }}>
-                        Rs. {emp.totalSalary.toFixed(2)}
-                      </strong>
-                    </td>
-                    <td className="checkbox-cell">
-                      <input
-                        type="checkbox"
-                        checked={salaryChecklist[emp.employeeId] || false}
-                        onChange={() => handleSalaryCheckboxChange(emp.employeeId)}
-                        className="salary-checkbox"
-                        title={`Mark salary paid for ${emp.firstName} ${emp.lastName}`}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Export Section */}
-          <div className="export-section">
-            <button
-              onClick={handleExport}
-              disabled={isExporting}
-              className="btn btn-primary btn-lg"
-            >
-              {isExporting ? (
-                <>
-                  <span className="spinner" style={{ display: 'inline-block', marginRight: '10px' }} />
-                  Exporting...
-                </>
-              ) : (
-                '📥 Download Excel Report'
-              )}
-            </button>
-            <button
-              onClick={loadReports}
-              className="btn btn-secondary"
-              title="Refresh the report data"
-            >
-              🔄 Refresh
-            </button>
-          </div>
-        </div>
-      </div>
+      <Card title="Summary Breakdown">
+        <Table>
+          <thead>
+            <tr>
+              <th>Employee Name</th>
+              <th>ID</th>
+              <th>Days</th>
+              <th>Late (hrs)</th>
+              <th>Early (hrs)</th>
+              <th>OT (hrs)</th>
+              <th>Total Salary</th>
+              <th style={{ textAlign: 'center' }}>✓ Paid</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reportData.summary.map((emp) => (
+              <tr key={emp.employeeId}>
+                <td><strong>{emp.firstName} {emp.lastName}</strong></td>
+                <td>{emp.employeeId}</td>
+                <td>{emp.totalDaysProcessed}</td>
+                <td>{emp.totalLateDuration.toFixed(2)}</td>
+                <td>{emp.totalEarlyLeaveDuration.toFixed(2)}</td>
+                <td>{emp.totalOvertimeDuration.toFixed(2)}</td>
+                <td>
+                  <strong style={{ fontSize: '0.95rem', color: 'var(--color-primary)' }}>
+                    Rs. {emp.totalSalary.toFixed(2)}
+                  </strong>
+                </td>
+                <td style={{ textAlign: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={salaryChecklist[emp.employeeId] || false}
+                    onChange={() => handleSalaryCheckboxChange(emp.employeeId)}
+                    style={{ width: '1.125rem', height: '1.125rem', cursor: 'pointer', accentColor: 'var(--color-success)' }}
+                    title={`Mark salary paid for ${emp.firstName} ${emp.lastName}`}
+                  />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      </Card>
     </div>
   );
 }

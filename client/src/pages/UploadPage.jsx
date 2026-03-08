@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import FileUpload from '../components/FileUpload';
 import DailyReport from '../components/DailyReport';
 import SummaryReport from '../components/SummaryReport';
+import Alert from '../components/Alert';
 import {
   calculateSalary,
   exportSalaryReport,
   clearSessionData,
 } from '../services/api';
+import { AlertTriangle, RefreshCw } from 'lucide-react';
 
 export default function UploadPage() {
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -20,19 +22,13 @@ export default function UploadPage() {
   const [skippedEmployees, setSkippedEmployees] = useState([]);
 
   const handleUploadSuccess = async (responseData) => {
-    // Append new files to existing list
     const newFiles = responseData.fileNames.map(name => ({ name, uploadedAt: new Date() }));
     setUploadedFiles(prevFiles => [...prevFiles, ...newFiles]);
-    
-    // Update employees list (server already merges and deduplicates)
     setUploadedEmployees(responseData.employees);
-    
     setDailyReports([]);
     setSummary([]);
     setError('');
     setSuccessMessage('');
-
-    // Automatically calculate using Employee Settings after upload
     await calculateUsingEmployeeSettings();
   };
 
@@ -40,22 +36,12 @@ export default function UploadPage() {
     setIsCalculating(true);
     setError('');
     setSuccessMessage('');
-
     try {
-      const response = await calculateSalary(
-        {},
-        {}, // No settings passed - using employee-specific configuration
-        null,
-        true // Use database employee configuration
-      );
-
+      const response = await calculateSalary({}, {}, null, true);
       setDailyReports(response.data.dailyReports);
       setSummary(response.data.summary);
       setSkippedEmployees(response.data.skippedEmployees || []);
-
       if (response.data.skippedEmployees && response.data.skippedEmployees.length > 0) {
-        // Don't set as error - set as warning message instead
-        // Error will show the warning, but results will still be displayed
         setSuccessMessage('Salary calculated successfully! (See warning below)');
       } else {
         setSuccessMessage('Salary calculated successfully using Employee Settings!');
@@ -73,11 +59,8 @@ export default function UploadPage() {
   const handleExport = async () => {
     setIsExporting(true);
     setError('');
-
     try {
       const response = await exportSalaryReport();
-
-      // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -86,7 +69,6 @@ export default function UploadPage() {
       link.click();
       link.parentNode.removeChild(link);
       window.URL.revokeObjectURL(url);
-
       setSuccessMessage('Report exported successfully!');
     } catch (err) {
       setError('Failed to export report. Please try again.');
@@ -107,52 +89,50 @@ export default function UploadPage() {
         setError('');
         setSuccessMessage('Data cleared. Ready for new upload.');
       } catch (err) {
-        // API failed; keep UI intact but show error
-        setError(
-          err.response?.data?.error ||
-          'Failed to clear data. Please try again.'
-        );
+        setError(err.response?.data?.error || 'Failed to clear data. Please try again.');
       }
     }
   };
 
-  // Progress indicators
   const currentStep = summary.length > 0 ? 2 : 1;
   const steps = ['Upload', 'Review'];
 
   return (
-    <div className="container">
+    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
       {/* Progress Steps */}
-      <div style={{ marginBottom: '30px' }}>
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap' }}>
+      <div style={{ marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
           {steps.map((step, idx) => (
             <React.Fragment key={idx}>
               <div
                 style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '32px',
+                  height: '32px',
                   borderRadius: '50%',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontWeight: 700,
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
                   color: 'white',
-                  backgroundColor: idx + 1 <= currentStep ? '#2563eb' : '#e5e7eb',
+                  backgroundColor: idx + 1 <= currentStep ? 'var(--color-primary)' : 'var(--border-color)',
                   transition: 'all 0.3s ease',
                 }}
               >
                 {idx + 1 <= currentStep ? '✓' : idx + 1}
               </div>
-              <span style={{ fontWeight: 600, color: idx + 1 <= currentStep ? '#2563eb' : '#9ca3af' }}>
+              <span style={{
+                fontWeight: 500,
+                color: idx + 1 <= currentStep ? 'var(--color-text)' : 'var(--color-text-muted)'
+              }}>
                 {step}
               </span>
               {idx < steps.length - 1 && (
                 <div
                   style={{
-                    width: '30px',
+                    width: '40px',
                     height: '2px',
-                    backgroundColor: idx + 1 < currentStep ? '#2563eb' : '#e5e7eb',
-                    margin: '0 5px',
+                    backgroundColor: idx + 1 < currentStep ? 'var(--color-primary)' : 'var(--border-color)',
                   }}
                 />
               )}
@@ -162,70 +142,57 @@ export default function UploadPage() {
       </div>
 
       {/* Alerts */}
-      {error && <div className="alert alert-danger">⚠️ {error}</div>}
-      {successMessage && (
-        <div className="alert alert-success">✓ {successMessage}</div>
-      )}
+      {error && <Alert type="danger" message={error} />}
+      {successMessage && <Alert type="success" message={successMessage} />}
 
       {/* Skipped Employees Warning */}
       {skippedEmployees.length > 0 && (
         <div style={{
-          backgroundColor: '#fef3c7',
-          border: '2px solid #f59e0b',
-          borderRadius: '6px',
-          padding: '20px',
-          marginBottom: '20px',
-          marginTop: '10px',
+          backgroundColor: 'var(--color-warning-bg)',
+          border: '1px solid #FCD34D',
+          borderRadius: 'var(--border-radius)',
+          padding: '1.5rem',
+          marginBottom: '1.5rem',
         }}>
           <div style={{
-            color: '#b45309',
-            fontSize: '16px',
-            fontWeight: 700,
-            marginBottom: '15px',
+            color: '#B45309',
+            fontSize: '1rem',
+            fontWeight: 600,
+            marginBottom: '1rem',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
+            gap: '0.5rem',
           }}>
-            <span style={{ fontSize: '20px' }}>⚠️</span>
+            <AlertTriangle size={20} />
             Skipped Employees ({skippedEmployees.length})
           </div>
-          <p style={{
-            color: '#92400e',
-            fontSize: '14px',
-            marginBottom: '12px',
-            margin: '0 0 12px 0',
-          }}>
+          <p style={{ color: '#92400E', fontSize: '0.875rem', marginBottom: '1rem' }}>
             The following employees from the attendance file were not configured in Employee Settings and were skipped from salary calculation:
           </p>
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-            gap: '8px',
+            gap: '0.5rem',
           }}>
             {skippedEmployees.map((name, idx) => (
               <div
                 key={idx}
                 style={{
-                  backgroundColor: 'rgba(179, 29, 29, 0.05)',
-                  border: '1px solid #dc2626',
+                  backgroundColor: 'white',
+                  border: '1px solid #FDE68A',
                   borderRadius: '4px',
-                  padding: '8px 12px',
-                  color: '#7f1d1d',
-                  fontSize: '13px',
+                  padding: '0.5rem 0.75rem',
+                  color: '#92400E',
+                  fontSize: '0.875rem',
                   fontWeight: 500,
                 }}
               >
-                • {name}
+                {name}
               </div>
             ))}
           </div>
-          <p style={{
-            color: '#92400e',
-            fontSize: '13px',
-            marginTop: '12px',
-            marginBottom: 0,
-          }}>
-            💡 <strong>Tip:</strong> Add these employees to Employee Settings and re-upload the file to include them in salary calculations.
+          <p style={{ color: '#92400E', fontSize: '0.875rem', marginTop: '1rem', marginBottom: 0 }}>
+            <strong style={{ fontWeight: 600 }}>Tip:</strong> Add these employees to Employee Settings and re-upload the file to include them.
           </p>
         </div>
       )}
@@ -234,26 +201,31 @@ export default function UploadPage() {
       <FileUpload onUploadSuccess={handleUploadSuccess} uploadedFiles={uploadedFiles} />
 
       {/* Step 2: Review Reports */}
-      {dailyReports.length > 0 && <DailyReport dailyReports={dailyReports} />}
+      {dailyReports.length > 0 && (
+        <div style={{ marginTop: '2rem' }}>
+          <DailyReport dailyReports={dailyReports} />
+        </div>
+      )}
 
       {summary.length > 0 && (
-        <>
+        <div style={{ marginTop: '2rem' }}>
           <SummaryReport
             summary={summary}
             onExport={handleExport}
             isExporting={isExporting}
           />
 
-          <div className="action-buttons">
+          <div style={{ marginTop: '2rem', display: 'flex', justifyContent: 'flex-start' }}>
             <button
               onClick={handleClear}
-              className="btn btn-warning btn-lg"
+              className="btn btn-secondary"
               title="Clear all data and start a new calculation"
             >
-              🔄 Start New Calculation
+              <RefreshCw size={16} />
+              Start New Calculation
             </button>
           </div>
-        </>
+        </div>
       )}
     </div>
   );

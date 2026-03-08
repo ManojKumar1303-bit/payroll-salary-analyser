@@ -5,6 +5,10 @@ import {
   updateEmployee,
   deleteEmployee,
 } from '../services/api';
+import Card from '../components/Card';
+import Table from '../components/Table';
+import Alert from '../components/Alert';
+import { Search, UserPlus, UploadCloud, Edit2, Trash2, Info, Users } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -30,7 +34,6 @@ export default function EmployeeSettingsPage() {
     overtimeRate: 100,
   });
 
-  // Fetch employees on component mount
   useEffect(() => {
     fetchEmployees();
   }, []);
@@ -42,10 +45,7 @@ export default function EmployeeSettingsPage() {
       const response = await getAllEmployees();
       setEmployees(response.data.employees || []);
     } catch (err) {
-      setError(
-        err.response?.data?.error ||
-        'Failed to load employees. Please try again.'
-      );
+      setError(err.response?.data?.error || 'Failed to load employees. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -100,10 +100,8 @@ export default function EmployeeSettingsPage() {
     }
 
     setIsLoading(true);
-
     try {
       if (editingId) {
-        // Update existing employee
         await updateEmployee(formData.employeeId, {
           name: formData.name,
           dailySalary: formData.dailySalary,
@@ -113,18 +111,13 @@ export default function EmployeeSettingsPage() {
         });
         setSuccessMessage('Employee updated successfully!');
       } else {
-        // Create new employee
         await createEmployee(formData);
         setSuccessMessage('Employee created successfully!');
       }
-
       setShowForm(false);
       fetchEmployees();
     } catch (err) {
-      setError(
-        err.response?.data?.error ||
-        'Failed to save employee. Please try again.'
-      );
+      setError(err.response?.data?.error || 'Failed to save employee. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -134,16 +127,12 @@ export default function EmployeeSettingsPage() {
     if (window.confirm(`Are you sure you want to delete employee ${employeeId}?`)) {
       setIsLoading(true);
       setError('');
-
       try {
         await deleteEmployee(employeeId);
         setSuccessMessage('Employee deleted successfully!');
         fetchEmployees();
       } catch (err) {
-        setError(
-          err.response?.data?.error ||
-          'Failed to delete employee. Please try again.'
-        );
+        setError(err.response?.data?.error || 'Failed to delete employee. Please try again.');
       } finally {
         setIsLoading(false);
       }
@@ -182,26 +171,20 @@ export default function EmployeeSettingsPage() {
       setSuccessMessage(data.message || 'Employees imported successfully!');
       fetchEmployees();
     } catch (err) {
-      setError(
-        err.message ||
-        'Failed to import employees. Please check the file format.'
-      );
+      setError(err.message || 'Failed to import employees. Please check the file format.');
     } finally {
       setIsImporting(false);
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
     }
   };
 
-  // Filter employees based on search term
   const filteredEmployees = employees.filter((emp) =>
     emp.employeeId.toLowerCase().includes(searchTerm.toLowerCase()) ||
     emp.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Pagination
   const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedEmployees = filteredEmployees.slice(
@@ -210,71 +193,46 @@ export default function EmployeeSettingsPage() {
   );
 
   return (
-    <div className="container">
-      <h2 style={{ marginBottom: '20px' }}>👥 Employee Settings</h2>
+    <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 600, color: 'var(--color-text)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Users className="text-primary" /> Employee Settings
+        </h2>
+      </div>
 
-      {/* Alerts */}
-      {error && <div className="alert alert-danger">⚠️ {error}</div>}
-      {successMessage && (
-        <div className="alert alert-success">✓ {successMessage}</div>
-      )}
+      {error && <Alert type="danger" message={error} />}
+      {successMessage && <Alert type="success" message={successMessage} />}
 
-      {/* Search and Add Button */}
-      <div
-        style={{
-          display: 'flex',
-          gap: '10px',
-          marginBottom: '20px',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-        }}
-      >
-        <input
-          type="text"
-          placeholder="Search by ID or Name..."
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1);
-          }}
-          style={{
-            flex: 1,
-            minWidth: '200px',
-            padding: '10px',
-            border: '1px solid #ccc',
-            borderRadius: '4px',
-            fontSize: '14px',
-          }}
-        />
+      {/* Action Bar */}
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center', backgroundColor: 'white', padding: '1rem', borderRadius: 'var(--border-radius)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
+        <div style={{ position: 'relative', flex: '1', minWidth: '250px' }}>
+          <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+          <input
+            type="text"
+            placeholder="Search by ID or Name..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1);
+            }}
+            style={{ width: '100%', padding: '0.625rem 1rem 0.625rem 2.5rem', border: '1px solid var(--border-color)', borderRadius: '0.375rem', fontSize: '0.875rem', outline: 'none' }}
+          />
+        </div>
         <button
           onClick={handleAddClick}
           disabled={isLoading}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#10b981',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: isLoading ? 'not-allowed' : 'pointer',
-            fontWeight: 600,
-          }}
+          className="btn btn-primary"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
         >
-          ➕ Add Employee
+          <UserPlus size={16} /> Add Employee
         </button>
         <button
           onClick={handleImportClick}
           disabled={isLoading || isImporting}
-          style={{
-            padding: '10px 20px',
-            backgroundColor: '#8b5cf6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: isLoading || isImporting ? 'not-allowed' : 'pointer',
-            fontWeight: 600,
-          }}
+          className="btn btn-secondary"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'var(--color-accent)', color: 'white', borderColor: 'var(--color-accent)' }}
         >
-          {isImporting ? '⏳ Importing...' : '📥 Import Employees'}
+          <UploadCloud size={16} /> {isImporting ? 'Importing...' : 'Import Excel'}
         </button>
         <input
           ref={fileInputRef}
@@ -286,194 +244,227 @@ export default function EmployeeSettingsPage() {
         />
       </div>
 
+      {/* Main Table */}
+      <Card title="Employee Directory" noPadding>
+        {isLoading && !showForm ? (
+          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+            <div className="spinner" style={{ margin: '0 auto 1rem auto' }} />
+            <p>Loading employees...</p>
+          </div>
+        ) : filteredEmployees.length === 0 ? (
+          <div style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+            <Users size={48} style={{ margin: '0 auto 1rem auto', opacity: 0.2 }} />
+            <p style={{ fontSize: '1rem', fontWeight: 500, color: 'var(--color-text)' }}>
+              {searchTerm ? 'No employees found matching your search.' : 'No employees configured yet.'}
+            </p>
+            {!searchTerm && (
+              <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
+                Click "Add Employee" or "Import Excel" to get started.
+              </p>
+            )}
+          </div>
+        ) : (
+          <>
+            <Table>
+              <thead>
+                <tr>
+                  <th>Employee ID</th>
+                  <th>Name</th>
+                  <th>Daily Salary</th>
+                  <th>Late Penalty</th>
+                  <th>Early Leave Penalty</th>
+                  <th>Overtime Rate</th>
+                  <th style={{ textAlign: 'center' }}>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedEmployees.map((emp) => (
+                  <tr key={emp.employeeId}>
+                    <td><strong style={{ color: 'var(--color-primary)' }}>{emp.employeeId}</strong></td>
+                    <td>{emp.name}</td>
+                    <td>Rs. {emp.dailySalary}</td>
+                    <td>Rs. {emp.latePenalty}/hr</td>
+                    <td>Rs. {emp.earlyLeavePenalty}/hr</td>
+                    <td>Rs. {emp.overtimeRate}/hr</td>
+                    <td>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center' }}>
+                        <button
+                          onClick={() => handleEditClick(emp)}
+                          disabled={isLoading}
+                          style={{ padding: '0.5rem', backgroundColor: '#EFF6FF', color: '#3B82F6', border: 'none', borderRadius: '0.375rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                          title="Edit"
+                        >
+                          <Edit2 size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteClick(emp.employeeId)}
+                          disabled={isLoading}
+                          style={{ padding: '0.5rem', backgroundColor: '#FEF2F2', color: '#EF4444', border: 'none', borderRadius: '0.375rem', cursor: 'pointer', transition: 'all 0.2s' }}
+                          title="Delete"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', backgroundColor: 'var(--color-bg)' }}>
+                <span style={{ fontSize: '0.875rem', color: 'var(--color-text-muted)' }}>
+                  Showing {startIndex + 1} to {Math.min(startIndex + itemsPerPage, filteredEmployees.length)} of {filteredEmployees.length} entries
+                </span>
+                <div style={{ display: 'flex', gap: '0.25rem' }}>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    style={{ padding: '0.5rem 0.75rem', border: '1px solid var(--border-color)', backgroundColor: 'white', borderRadius: '0.375rem', fontSize: '0.875rem', cursor: currentPage === 1 ? 'not-allowed' : 'pointer', opacity: currentPage === 1 ? 0.5 : 1 }}
+                  >
+                    Previous
+                  </button>
+                  {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((page) => (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      style={{
+                        padding: '0.5rem 0.75rem',
+                        border: '1px solid',
+                        borderColor: currentPage === page ? 'var(--color-primary)' : 'var(--border-color)',
+                        backgroundColor: currentPage === page ? 'var(--color-primary)' : 'white',
+                        color: currentPage === page ? 'white' : 'var(--color-text)',
+                        borderRadius: '0.375rem',
+                        fontSize: '0.875rem',
+                        cursor: 'pointer',
+                        fontWeight: currentPage === page ? 600 : 400,
+                      }}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    style={{ padding: '0.5rem 0.75rem', border: '1px solid var(--border-color)', backgroundColor: 'white', borderRadius: '0.375rem', fontSize: '0.875rem', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', opacity: currentPage === totalPages ? 0.5 : 1 }}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </Card>
+
+      <div style={{ marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '1rem', backgroundColor: '#F0FDF4', color: '#166534', borderRadius: 'var(--border-radius)', border: '1px solid #BBF7D0' }}>
+        <Info size={20} className="flex-shrink-0" />
+        <p style={{ margin: 0, fontSize: '0.875rem', lineHeight: 1.5 }}>
+          <strong>Note:</strong> These employee settings will be used automatically during salary calculation. Make sure all employees in your attendance files are configured here.
+        </p>
+      </div>
+
       {/* Form Modal */}
       {showForm && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            zIndex: 1000,
-          }}
-          onClick={() => !isLoading && setShowForm(false)}
-        >
-          <div
-            style={{
-              backgroundColor: 'white',
-              padding: '30px',
-              borderRadius: '8px',
-              width: '90%',
-              maxWidth: '500px',
-              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <h3 style={{ marginBottom: '20px' }}>
-              {editingId ? 'Edit Employee' : 'Add New Employee'}
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '1rem' }} onClick={() => !isLoading && setShowForm(false)}>
+          <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '0.75rem', width: '100%', maxWidth: '500px', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04)' }} onClick={(e) => e.stopPropagation()}>
+            <h3 style={{ marginBottom: '1.5rem', fontSize: '1.25rem', fontWeight: 600, color: 'var(--color-text)' }}>
+              {editingId ? 'Edit Employee Details' : 'Add New Employee'}
             </h3>
-
             <form onSubmit={handleFormSubmit}>
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600 }}>
-                  Employee ID *
-                </label>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text)' }}>Employee ID *</label>
                 <input
                   type="text"
                   name="employeeId"
                   value={formData.employeeId}
                   onChange={handleFormChange}
                   disabled={!!editingId}
-                  placeholder="e.g., 1234567890"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                    opacity: editingId ? 0.6 : 1,
-                  }}
+                  placeholder="e.g., EMP001"
+                  style={{ width: '100%', padding: '0.625rem 0.75rem', border: '1px solid var(--border-color)', borderRadius: '0.375rem', fontSize: '0.875rem', outline: 'none', backgroundColor: editingId ? '#F3F4F6' : 'white', cursor: editingId ? 'not-allowed' : 'text' }}
                   required
                 />
               </div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600 }}>
-                  Name *
-                </label>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text)' }}>Full Name *</label>
                 <input
                   type="text"
                   name="name"
                   value={formData.name}
                   onChange={handleFormChange}
-                  placeholder="e.g., Manoj Kumar U"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                  }}
+                  placeholder="e.g., John Doe"
+                  style={{ width: '100%', padding: '0.625rem 0.75rem', border: '1px solid var(--border-color)', borderRadius: '0.375rem', fontSize: '0.875rem', outline: 'none' }}
                   required
                 />
               </div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600 }}>
-                  Daily Salary (Rs.) *
-                </label>
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text)' }}>Daily Salary (Rs.) *</label>
                 <input
                   type="number"
                   name="dailySalary"
                   value={formData.dailySalary}
                   onChange={handleFormChange}
-                  placeholder="e.g., 300"
+                  placeholder="e.g., 500"
                   step="0.01"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                  }}
+                  style={{ width: '100%', padding: '0.625rem 0.75rem', border: '1px solid var(--border-color)', borderRadius: '0.375rem', fontSize: '0.875rem', outline: 'none' }}
                   required
                 />
               </div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600 }}>
-                  Late Penalty (Rs./hour)
-                </label>
-                <input
-                  type="number"
-                  name="latePenalty"
-                  value={formData.latePenalty}
-                  onChange={handleFormChange}
-                  step="0.01"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                  }}
-                />
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text)' }}>Late Penalty (Rs./hr)</label>
+                  <input
+                    type="number"
+                    name="latePenalty"
+                    value={formData.latePenalty}
+                    onChange={handleFormChange}
+                    step="0.01"
+                    style={{ width: '100%', padding: '0.625rem 0.75rem', border: '1px solid var(--border-color)', borderRadius: '0.375rem', fontSize: '0.875rem', outline: 'none' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text)' }}>Early Leave (Rs./hr)</label>
+                  <input
+                    type="number"
+                    name="earlyLeavePenalty"
+                    value={formData.earlyLeavePenalty}
+                    onChange={handleFormChange}
+                    step="0.01"
+                    style={{ width: '100%', padding: '0.625rem 0.75rem', border: '1px solid var(--border-color)', borderRadius: '0.375rem', fontSize: '0.875rem', outline: 'none' }}
+                  />
+                </div>
               </div>
 
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600 }}>
-                  Early Leave Penalty (Rs./hour)
-                </label>
-                <input
-                  type="number"
-                  name="earlyLeavePenalty"
-                  value={formData.earlyLeavePenalty}
-                  onChange={handleFormChange}
-                  step="0.01"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                  }}
-                />
-              </div>
-
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 600 }}>
-                  Overtime Rate (Rs./hour)
-                </label>
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: 500, color: 'var(--color-text)' }}>Overtime Rate (Rs./hr)</label>
                 <input
                   type="number"
                   name="overtimeRate"
                   value={formData.overtimeRate}
                   onChange={handleFormChange}
                   step="0.01"
-                  style={{
-                    width: '100%',
-                    padding: '10px',
-                    border: '1px solid #ccc',
-                    borderRadius: '4px',
-                    fontSize: '14px',
-                  }}
+                  style={{ width: '100%', padding: '0.625rem 0.75rem', border: '1px solid var(--border-color)', borderRadius: '0.375rem', fontSize: '0.875rem', outline: 'none' }}
                 />
               </div>
 
-              <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end', marginTop: '2rem' }}>
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
                   disabled={isLoading}
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#6b7280',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: isLoading ? 'not-allowed' : 'pointer',
-                    fontWeight: 600,
-                  }}
+                  style={{ padding: '0.625rem 1.25rem', backgroundColor: 'white', color: 'var(--color-text)', border: '1px solid var(--border-color)', borderRadius: '0.375rem', cursor: isLoading ? 'not-allowed' : 'pointer', fontWeight: 500, fontSize: '0.875rem' }}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading}
-                  style={{
-                    padding: '10px 20px',
-                    backgroundColor: '#2563eb',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: isLoading ? 'not-allowed' : 'pointer',
-                    fontWeight: 600,
-                  }}
+                  className="btn btn-primary"
+                  style={{ opacity: isLoading ? 0.7 : 1 }}
                 >
                   {isLoading ? 'Saving...' : 'Save Employee'}
                 </button>
@@ -482,222 +473,6 @@ export default function EmployeeSettingsPage() {
           </div>
         </div>
       )}
-
-      {/* Employees Table */}
-      {isLoading && !showForm ? (
-        <div style={{ textAlign: 'center', padding: '40px' }}>
-          <p>Loading employees...</p>
-        </div>
-      ) : filteredEmployees.length === 0 ? (
-        <div
-          style={{
-            textAlign: 'center',
-            padding: '40px',
-            backgroundColor: '#f3f4f6',
-            borderRadius: '8px',
-          }}
-        >
-          <p style={{ fontSize: '16px', color: '#6b7280' }}>
-            {searchTerm ? 'No employees found matching your search.' : 'No employees configured yet.'}
-          </p>
-          {!searchTerm && (
-            <p style={{ fontSize: '14px', color: '#9ca3af', marginTop: '10px' }}>
-              Click "Add Employee" to create the first employee.
-            </p>
-          )}
-        </div>
-      ) : (
-        <>
-          <div style={{ overflowX: 'auto' }}>
-            <table
-              style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                backgroundColor: 'white',
-                borderRadius: '8px',
-                overflow: 'hidden',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-              }}
-            >
-              <thead>
-                <tr style={{ backgroundColor: '#f3f4f6', borderBottom: '2px solid #e5e7eb' }}>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>
-                    Employee ID
-                  </th>
-                  <th style={{ padding: '12px', textAlign: 'left', fontWeight: 600 }}>
-                    Name
-                  </th>
-                  <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600 }}>
-                    Daily Salary
-                  </th>
-                  <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600 }}>
-                    Late Penalty
-                  </th>
-                  <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600 }}>
-                    Early Leave Penalty
-                  </th>
-                  <th style={{ padding: '12px', textAlign: 'right', fontWeight: 600 }}>
-                    Overtime Rate
-                  </th>
-                  <th style={{ padding: '12px', textAlign: 'center', fontWeight: 600 }}>
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedEmployees.map((emp, idx) => (
-                  <tr
-                    key={emp.employeeId}
-                    style={{
-                      borderBottom: '1px solid #e5e7eb',
-                      backgroundColor: idx % 2 === 0 ? '#f9fafb' : 'white',
-                      ':hover': { backgroundColor: '#f3f4f6' },
-                    }}
-                  >
-                    <td
-                      style={{
-                        padding: '12px',
-                        fontWeight: 500,
-                        color: '#1f2937',
-                      }}
-                    >
-                      {emp.employeeId}
-                    </td>
-                    <td style={{ padding: '12px' }}>
-                      {emp.name}
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'right' }}>
-                      Rs. {emp.dailySalary}
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'right' }}>
-                      Rs. {emp.latePenalty}/hr
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'right' }}>
-                      Rs. {emp.earlyLeavePenalty}/hr
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'right' }}>
-                      Rs. {emp.overtimeRate}/hr
-                    </td>
-                    <td style={{ padding: '12px', textAlign: 'center' }}>
-                      <button
-                        onClick={() => handleEditClick(emp)}
-                        disabled={isLoading}
-                        style={{
-                          padding: '6px 12px',
-                          backgroundColor: '#3b82f6',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: isLoading ? 'not-allowed' : 'pointer',
-                          marginRight: '8px',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                        }}
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(emp.employeeId)}
-                        disabled={isLoading}
-                        style={{
-                          padding: '6px 12px',
-                          backgroundColor: '#ef4444',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '4px',
-                          cursor: isLoading ? 'not-allowed' : 'pointer',
-                          fontSize: '12px',
-                          fontWeight: 600,
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                gap: '10px',
-                marginTop: '20px',
-              }}
-            >
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                style={{
-                  padding: '8px 12px',
-                  backgroundColor: currentPage === 1 ? '#d1d5db' : '#2563eb',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                }}
-              >
-                ← Previous
-              </button>
-
-              {Array.from({ length: totalPages }, (_, idx) => idx + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  style={{
-                    padding: '8px 12px',
-                    backgroundColor: currentPage === page ? '#2563eb' : '#e5e7eb',
-                    color: currentPage === page ? 'white' : '#1f2937',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontWeight: currentPage === page ? 600 : 400,
-                  }}
-                >
-                  {page}
-                </button>
-              ))}
-
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                style={{
-                  padding: '8px 12px',
-                  backgroundColor: currentPage === totalPages ? '#d1d5db' : '#2563eb',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                }}
-              >
-                Next →
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* Info Box */}
-      <div
-        style={{
-          marginTop: '30px',
-          backgroundColor: '#dbeafe',
-          border: '1px solid #93c5fd',
-          borderRadius: '8px',
-          padding: '15px',
-          color: '#1e40af',
-        }}
-      >
-        <p style={{ margin: 0, fontSize: '14px' }}>
-          <strong>ℹ️ Note:</strong> These employee settings will be used automatically during salary
-          calculation. Make sure all employees in your attendance files are configured here.
-        </p>
-      </div>
     </div>
   );
 }
