@@ -54,7 +54,9 @@ export default function UploadPage() {
       setSkippedEmployees(response.data.skippedEmployees || []);
 
       if (response.data.skippedEmployees && response.data.skippedEmployees.length > 0) {
-        setError(`⚠️ ${response.data.skippedEmployees.length} employee(s) were skipped because they are not configured in Employee Settings: ${response.data.skippedEmployees.join(', ')}`);
+        // Don't set as error - set as warning message instead
+        // Error will show the warning, but results will still be displayed
+        setSuccessMessage('Salary calculated successfully! (See warning below)');
       } else {
         setSuccessMessage('Salary calculated successfully using Employee Settings!');
       }
@@ -163,6 +165,69 @@ export default function UploadPage() {
       {error && <div className="alert alert-danger">⚠️ {error}</div>}
       {successMessage && (
         <div className="alert alert-success">✓ {successMessage}</div>
+      )}
+
+      {/* Skipped Employees Warning */}
+      {skippedEmployees.length > 0 && (
+        <div style={{
+          backgroundColor: '#fef3c7',
+          border: '2px solid #f59e0b',
+          borderRadius: '6px',
+          padding: '20px',
+          marginBottom: '20px',
+          marginTop: '10px',
+        }}>
+          <div style={{
+            color: '#b45309',
+            fontSize: '16px',
+            fontWeight: 700,
+            marginBottom: '15px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+          }}>
+            <span style={{ fontSize: '20px' }}>⚠️</span>
+            Skipped Employees ({skippedEmployees.length})
+          </div>
+          <p style={{
+            color: '#92400e',
+            fontSize: '14px',
+            marginBottom: '12px',
+            margin: '0 0 12px 0',
+          }}>
+            The following employees from the attendance file were not configured in Employee Settings and were skipped from salary calculation:
+          </p>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+            gap: '8px',
+          }}>
+            {skippedEmployees.map((name, idx) => (
+              <div
+                key={idx}
+                style={{
+                  backgroundColor: 'rgba(179, 29, 29, 0.05)',
+                  border: '1px solid #dc2626',
+                  borderRadius: '4px',
+                  padding: '8px 12px',
+                  color: '#7f1d1d',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                }}
+              >
+                • {name}
+              </div>
+            ))}
+          </div>
+          <p style={{
+            color: '#92400e',
+            fontSize: '13px',
+            marginTop: '12px',
+            marginBottom: 0,
+          }}>
+            💡 <strong>Tip:</strong> Add these employees to Employee Settings and re-upload the file to include them in salary calculations.
+          </p>
+        </div>
       )}
 
       {/* Step 1: File Upload */}

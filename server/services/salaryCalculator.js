@@ -225,9 +225,11 @@ export const processDailyRecordsFromDB = (
   records.forEach((record) => {
     const employee = employeeDocuments[record.employeeId];
 
-    // If employee not found in database, skip this record
+    // If employee not found in database, skip this record and track the name
     if (!employee) {
-      skippedEmployees.add(record.employeeId);
+      // Construct employee name from first and last name
+      const employeeName = `${record.firstName || ''} ${record.lastName || ''}`.trim();
+      skippedEmployees.add(employeeName);
       return;
     }
 
