@@ -31,7 +31,7 @@ export default function DailyReportsPage() {
   };
 
   if (isLoading) {
-    return <Loader fullPage text="Loading daily reports..." />;
+    return <Loader type="card" text="Loading daily reports..." />;
   }
 
   if (error) {

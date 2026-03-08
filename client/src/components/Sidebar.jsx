@@ -23,8 +23,9 @@ const Sidebar = ({ currentPage, onPageChange }) => {
                             key={item.id}
                             className={`sidebar-link ${currentPage === item.id ? 'active' : ''}`}
                             onClick={() => onPageChange(item.id)}
+                            style={{ gap: '1rem', padding: '0.875rem 1.25rem' }}
                         >
-                            <Icon size={20} className="sidebar-icon" />
+                            <Icon size={24} className="sidebar-icon" />
                             <span>{item.label}</span>
                         </button>
                     );

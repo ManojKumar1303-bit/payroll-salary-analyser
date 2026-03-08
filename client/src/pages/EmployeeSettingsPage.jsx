@@ -215,7 +215,9 @@ export default function EmployeeSettingsPage() {
               setSearchTerm(e.target.value);
               setCurrentPage(1);
             }}
-            style={{ width: '100%', padding: '0.625rem 1rem 0.625rem 2.5rem', border: '1px solid var(--border-color)', borderRadius: '0.375rem', fontSize: '0.875rem', outline: 'none' }}
+            style={{ width: '100%', padding: '0.625rem 1rem 0.625rem 2.5rem', border: '2px solid var(--border-color)', borderRadius: '0.375rem', fontSize: '0.875rem', outline: 'none', transition: 'border-color 0.2s' }}
+            onFocus={(e) => e.target.style.borderColor = 'var(--color-primary)'}
+            onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
           />
         </div>
         <button
@@ -247,9 +249,13 @@ export default function EmployeeSettingsPage() {
       {/* Main Table */}
       <Card title="Employee Directory" noPadding>
         {isLoading && !showForm ? (
-          <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-            <div className="spinner" style={{ margin: '0 auto 1rem auto' }} />
-            <p>Loading employees...</p>
+          <div className="loading-card-container" style={{ minHeight: '300px' }}>
+            <div className="loading-card" style={{ padding: '2rem', boxShadow: 'none', border: 'none' }}>
+              <div className="loading-spinner">
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
+              </div>
+              <p className="loading-card-text">Loading employees...</p>
+            </div>
           </div>
         ) : filteredEmployees.length === 0 ? (
           <div style={{ padding: '4rem 2rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>

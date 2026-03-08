@@ -119,7 +119,11 @@ export default function FileUpload({ onUploadSuccess, uploadedFiles = [] }) {
         >
           <UploadCloud size={48} className="upload-icon" />
           <div className="upload-text">Drag and drop your Excel files here</div>
-          <div className="upload-hint">or click to browse (.xlsx, .xls)</div>
+          <div className="upload-hint" style={{ marginBottom: '1rem' }}>or click to browse (.xlsx, .xls)</div>
+          <div style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+            <span>Supported formats: .xlsx, .xls</span>
+            <span>Maximum file size: 50MB</span>
+          </div>
         </div>
       </div>
 

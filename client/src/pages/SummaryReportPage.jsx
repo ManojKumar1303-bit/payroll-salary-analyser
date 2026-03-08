@@ -64,7 +64,7 @@ export default function SummaryReportPage() {
   };
 
   if (isLoading) {
-    return <Loader fullPage text="Loading summary report..." />;
+    return <Loader type="card" text="Loading summary report..." />;
   }
 
   if (error) {

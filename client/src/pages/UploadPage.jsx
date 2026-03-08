@@ -94,52 +94,8 @@ export default function UploadPage() {
     }
   };
 
-  const currentStep = summary.length > 0 ? 2 : 1;
-  const steps = ['Upload', 'Review'];
-
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-      {/* Progress Steps */}
-      <div style={{ marginBottom: '2rem' }}>
-        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          {steps.map((step, idx) => (
-            <React.Fragment key={idx}>
-              <div
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: 600,
-                  fontSize: '0.875rem',
-                  color: 'white',
-                  backgroundColor: idx + 1 <= currentStep ? 'var(--color-primary)' : 'var(--border-color)',
-                  transition: 'all 0.3s ease',
-                }}
-              >
-                {idx + 1 <= currentStep ? '✓' : idx + 1}
-              </div>
-              <span style={{
-                fontWeight: 500,
-                color: idx + 1 <= currentStep ? 'var(--color-text)' : 'var(--color-text-muted)'
-              }}>
-                {step}
-              </span>
-              {idx < steps.length - 1 && (
-                <div
-                  style={{
-                    width: '40px',
-                    height: '2px',
-                    backgroundColor: idx + 1 < currentStep ? 'var(--color-primary)' : 'var(--border-color)',
-                  }}
-                />
-              )}
-            </React.Fragment>
-          ))}
-        </div>
-      </div>
 
       {/* Alerts */}
       {error && <Alert type="danger" message={error} />}
