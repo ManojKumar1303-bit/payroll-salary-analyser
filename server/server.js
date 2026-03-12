@@ -7,7 +7,9 @@ import { mkdir } from 'fs/promises';
 import dotenv from 'dotenv';
 import uploadRoutes from './routes/uploadRoutes.js';
 import employeeRoutes from './routes/employeeRoutes.js';
+import authRoutes from './routes/authRoutes.js';
 import { connectDB } from './db/connection.js';
+import { verifyToken } from './middleware/authMiddleware.js';
 
 // load environment variables from .env file if present
 dotenv.config();
@@ -53,8 +55,11 @@ try {
 }
 
 // Routes
-app.use('/api', uploadRoutes);
-app.use('/api/employees', employeeRoutes);
+app.use('/api/auth', authRoutes);
+
+// Protected routes
+app.use('/api', verifyToken, uploadRoutes);
+app.use('/api/employees', verifyToken, employeeRoutes);
 
 // Health check endpoint
 app.get('/health', (req, res) => {

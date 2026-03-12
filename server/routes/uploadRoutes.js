@@ -10,6 +10,11 @@ import {
   getReports,
   exportSalaryReport,
 } from '../controllers/salaryController.js';
+import {
+  getReportHistory,
+  getReportById,
+  deleteReportHistory
+} from '../controllers/reportController.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -73,6 +78,24 @@ router.get('/reports', getReports);
  * Export salary report as Excel file
  */
 router.get('/export-report', exportSalaryReport);
+
+/**
+ * GET /api/report-history
+ * Get a list of all historical calculated summary reports
+ */
+router.get('/report-history', getReportHistory);
+
+/**
+ * GET /api/report-history/:id
+ * Get details of a specific calculated summary report
+ */
+router.get('/report-history/:id', getReportById);
+
+/**
+ * DELETE /api/reports/:id
+ * Delete a specific calculated summary report
+ */
+router.delete('/reports/:id', deleteReportHistory);
 
 /**
  * POST /api/clear

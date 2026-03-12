@@ -5,6 +5,7 @@ import {
 } from '../services/salaryCalculator.js';
 import { getSessionData, setSessionData } from './uploadController.js';
 import Employee from '../models/Employee.js';
+import SummaryReport from '../models/SummaryReport.js';
 import ExcelJS from 'exceljs';
 import { decimalHoursToTimeString } from '../utils/timeConverter.js';
 
@@ -100,7 +101,41 @@ export const calculateSalary = async (req, res) => {
     // Generate summary
     const summary = generateSalarySummary(dailyReports);
 
-    // Store in session for report retrieval
+    // Calculate aggregated totals for the database
+    const totalEmployees = summary.length;
+    const totalSalary = summary.reduce((sum, emp) => sum + (emp.totalSalary || 0), 0);
+    const totalOvertime = summary.reduce((sum, emp) => sum + (emp.totalOvertimePayment || 0), 0);
+    const totalDeductions = summary.reduce((sum, emp) => sum + (emp.totalLateDeduction || 0) + (emp.totalEarlyLeaveDeduction || 0), 0);
+
+    // Map to required DB format
+    const mappedEmployees = summary.map(emp => ({
+      employeeId: emp.employeeId,
+      name: `${emp.firstName} ${emp.lastName}`.trim(),
+      shift: emp.shift || 'Normal',
+      lateHours: emp.totalLateDuration || 0,
+      earlyLeaveHours: emp.totalEarlyLeaveDuration || 0,
+      overtimeHours: emp.totalOvertimeDuration || 0,
+      baseSalary: emp.baseSalary || 0,
+      lateDeduction: emp.totalLateDeduction || 0,
+      earlyDeduction: emp.totalEarlyLeaveDeduction || 0,
+      overtimeBonus: emp.totalOvertimePayment || 0,
+      finalSalary: emp.totalSalary || 0,
+      status: emp.numberOfAbsentDays > 0 ? `Absent (${emp.numberOfAbsentDays}d)` : 'Normal'
+    }));
+
+    // Store in database
+    const summaryReport = new SummaryReport({
+      date: new Date(),
+      totalEmployees,
+      totalSalary,
+      totalOvertime,
+      totalDeductions,
+      employees: mappedEmployees
+    });
+    
+    await summaryReport.save();
+
+    // Store in session for report retrieval (for the immediate download action if the user doesn't hit the History page)
     const storedReports = {
       ...sessionData,
       dailyReports,

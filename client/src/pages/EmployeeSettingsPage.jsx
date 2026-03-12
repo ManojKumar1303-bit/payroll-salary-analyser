@@ -387,7 +387,7 @@ export default function EmployeeSettingsPage() {
                   value={formData.employeeId}
                   onChange={handleFormChange}
                   disabled={!!editingId}
-                  placeholder="e.g., EMP001"
+                  placeholder="e.g., 1234567890"
                   style={{ width: '100%', padding: '0.625rem 0.75rem', border: '1px solid var(--border-color)', borderRadius: '0.375rem', fontSize: '0.875rem', outline: 'none', backgroundColor: editingId ? '#F3F4F6' : 'white', cursor: editingId ? 'not-allowed' : 'text' }}
                   required
                 />
@@ -400,7 +400,7 @@ export default function EmployeeSettingsPage() {
                   name="name"
                   value={formData.name}
                   onChange={handleFormChange}
-                  placeholder="e.g., John Doe"
+                  placeholder="e.g., Manoj Kumar U"
                   style={{ width: '100%', padding: '0.625rem 0.75rem', border: '1px solid var(--border-color)', borderRadius: '0.375rem', fontSize: '0.875rem', outline: 'none' }}
                   required
                 />

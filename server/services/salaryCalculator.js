@@ -233,13 +233,13 @@ export const processDailyRecordsFromDB = (
       return;
     }
 
-    // Use employee database values
+    // strict adherence: only use employee-specific settings, fallback to 0 if not present
     const employeePenalties = {
-      latePenalty: employee.latePenalty || penalties?.latePenalty || 50,
-      earlyLeavePenalty: employee.earlyLeavePenalty || penalties?.earlyLeavePenalty || 50,
+      latePenalty: employee.latePenalty || 0,
+      earlyLeavePenalty: employee.earlyLeavePenalty || 0,
     };
 
-    const employeeOvertimeRate = employee.overtimeRate || overtimeRate || 100;
+    const employeeOvertimeRate = employee.overtimeRate || 0;
 
     // Calculate salary using employee's configured daily salary
     const salaryRecord = calculateDailySalary(
@@ -278,6 +278,11 @@ export const generateSalarySummary = (dailyReports) => {
           totalLateDuration: 0,
           totalEarlyLeaveDuration: 0,
           totalOvertimeDuration: 0,
+          totalLateDeduction: 0,
+          totalEarlyLeaveDeduction: 0,
+          totalOvertimePayment: 0,
+          baseSalary: salaryRecord.baseSalary || 0,
+          shift: salaryRecord.shift || 'Normal',
           totalSalary: 0,
           numberOfAbsentDays: 0,
         });
@@ -288,6 +293,9 @@ export const generateSalarySummary = (dailyReports) => {
       summary.totalLateDuration += salaryRecord.lateDuration;
       summary.totalEarlyLeaveDuration += salaryRecord.earlyLeaveDuration;
       summary.totalOvertimeDuration += salaryRecord.overtimeDuration;
+      summary.totalLateDeduction += salaryRecord.lateDeduction;
+      summary.totalEarlyLeaveDeduction += salaryRecord.earlyLeaveDeduction;
+      summary.totalOvertimePayment += salaryRecord.overtimePayment;
       summary.totalSalary += salaryRecord.finalSalary;
 
       // Debug logging for overtime aggregation
@@ -307,6 +315,9 @@ export const generateSalarySummary = (dailyReports) => {
     totalLateDuration: Math.round(emp.totalLateDuration * 100) / 100,
     totalEarlyLeaveDuration: Math.round(emp.totalEarlyLeaveDuration * 100) / 100,
     totalOvertimeDuration: Math.round(emp.totalOvertimeDuration * 100) / 100,
+    totalLateDeduction: Math.round(emp.totalLateDeduction * 100) / 100,
+    totalEarlyLeaveDeduction: Math.round(emp.totalEarlyLeaveDeduction * 100) / 100,
+    totalOvertimePayment: Math.round(emp.totalOvertimePayment * 100) / 100,
     totalSalary: Math.round(emp.totalSalary * 100) / 100,
   })).sort((a, b) =>
     a.employeeId.localeCompare(b.employeeId)

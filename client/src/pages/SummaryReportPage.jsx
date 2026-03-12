@@ -12,7 +12,6 @@ export default function SummaryReportPage() {
   const [error, setError] = useState('');
   const [isExporting, setIsExporting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [salaryChecklist, setSalaryCheklist] = useState({});
 
   useEffect(() => {
     loadReports();
@@ -53,21 +52,7 @@ export default function SummaryReportPage() {
       setError('Failed to export report. Please try again.');
     } finally {
       setIsExporting(false);
-    }
   };
-
-  const handleSalaryCheckboxChange = (employeeId) => {
-    setSalaryCheklist((prev) => ({
-      ...prev,
-      [employeeId]: !prev[employeeId],
-    }));
-  };
-
-  if (isLoading) {
-    return <Loader type="card" text="Loading summary report..." />;
-  }
-
-  if (error) {
     return <div style={{ maxWidth: '1200px', margin: '0 auto' }}><Alert type="danger" message={error} /></div>;
   }
 
@@ -83,7 +68,6 @@ export default function SummaryReportPage() {
   const totalLateDuration = reportData.summary.reduce((sum, emp) => sum + emp.totalLateDuration, 0);
   const totalEarlyLeaveDuration = reportData.summary.reduce((sum, emp) => sum + emp.totalEarlyLeaveDuration, 0);
   const totalOvertimeDuration = reportData.summary.reduce((sum, emp) => sum + emp.totalOvertimeDuration, 0);
-  const paidCount = Object.values(salaryChecklist).filter(Boolean).length;
 
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
@@ -128,14 +112,6 @@ export default function SummaryReportPage() {
           </div>
           <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>Rs. {(totalGrossSalary / reportData.summary.length).toFixed(0)}</div>
         </div>
-
-        <div style={{ backgroundColor: 'white', padding: '1.25rem', borderRadius: 'var(--border-radius)', border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.5rem', color: 'var(--color-success)' }}>
-            <Calendar size={20} />
-            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>Salary Paid</span>
-          </div>
-          <div style={{ fontSize: '1.5rem', fontWeight: 700 }}>{paidCount} / {reportData.summary.length}</div>
-        </div>
       </div>
 
       <Card title="Summary Breakdown">
@@ -149,7 +125,6 @@ export default function SummaryReportPage() {
               <th>Early (hrs)</th>
               <th>OT (hrs)</th>
               <th>Total Salary</th>
-              <th style={{ textAlign: 'center' }}>✓ Paid</th>
             </tr>
           </thead>
           <tbody>
@@ -165,15 +140,6 @@ export default function SummaryReportPage() {
                   <strong style={{ fontSize: '0.95rem', color: 'var(--color-primary)' }}>
                     Rs. {emp.totalSalary.toFixed(2)}
                   </strong>
-                </td>
-                <td style={{ textAlign: 'center' }}>
-                  <input
-                    type="checkbox"
-                    checked={salaryChecklist[emp.employeeId] || false}
-                    onChange={() => handleSalaryCheckboxChange(emp.employeeId)}
-                    style={{ width: '1.125rem', height: '1.125rem', cursor: 'pointer', accentColor: 'var(--color-success)' }}
-                    title={`Mark salary paid for ${emp.firstName} ${emp.lastName}`}
-                  />
                 </td>
               </tr>
             ))}

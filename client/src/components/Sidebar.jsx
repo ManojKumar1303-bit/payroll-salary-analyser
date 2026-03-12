@@ -1,13 +1,25 @@
 import React from 'react';
-import { LayoutDashboard, UploadCloud, FileText, BarChart3, Users } from 'lucide-react';
+import { LayoutDashboard, UploadCloud, FileText, BarChart3, History, Users } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 
-const Sidebar = ({ currentPage, onPageChange }) => {
+const Sidebar = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
     const navItems = [
-        { id: 'upload', label: 'Upload & Calculate', icon: UploadCloud },
-        { id: 'daily-reports', label: 'Daily Report', icon: FileText },
-        { id: 'summary-report', label: 'Summary Report', icon: BarChart3 },
-        { id: 'employee-settings', label: 'Employee Settings', icon: Users },
+        { id: 'upload', path: '/upload', label: 'Upload & Calculate', icon: UploadCloud },
+        { id: 'daily-reports', path: '/daily-reports', label: 'Daily Report', icon: FileText },
+        { id: 'summary-report', path: '/summary-report', label: 'Summary Report', icon: BarChart3 },
+        { id: 'report-history', path: '/report-history', label: 'Report History', icon: History },
+        { id: 'employee-settings', path: '/employee-settings', label: 'Employee Settings', icon: Users },
     ];
+
+    const getCurrentId = () => {
+      const active = navItems.find(item => location.pathname.startsWith(item.path));
+      return active ? active.id : 'upload';
+    };
+
+    const currentPage = getCurrentId();
 
     return (
         <aside className="sidebar">
@@ -22,10 +34,10 @@ const Sidebar = ({ currentPage, onPageChange }) => {
                         <button
                             key={item.id}
                             className={`sidebar-link ${currentPage === item.id ? 'active' : ''}`}
-                            onClick={() => onPageChange(item.id)}
-                            style={{ gap: '1rem', padding: '0.875rem 1.25rem' }}
+                            onClick={() => navigate(item.path)}
+                            style={{ gap: '1rem', padding: '0.875rem 1.25rem', width: '100%', border: 'none', background: 'transparent', textAlign: 'left' }}
                         >
-                            <Icon size={24} className="sidebar-icon" />
+                            <span className="icon"><Icon size={24} className="sidebar-icon" /></span>
                             <span>{item.label}</span>
                         </button>
                     );

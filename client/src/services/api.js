@@ -7,6 +7,33 @@ const apiClient = axios.create({
   baseURL: API_URL,
 });
 
+// Add a request interceptor to attach the JWT token
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Add a response interceptor to handle 401 errors
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Don't redirect immediately if it's the login route failing
+      if (error.config.url !== '/auth/login') {
+        localStorage.removeItem('token');
+        window.location.reload(); // Force reload to show login page
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 /**
  * Upload multiple Excel files
  */
@@ -63,6 +90,27 @@ export const exportSalaryReport = async () => {
 };
 
 /**
+ * Get all past summary reports (metadata only)
+ */
+export const getReportHistory = async () => {
+  return apiClient.get('/report-history');
+};
+
+/**
+ * Get details of a specific summary report
+ */
+export const getReportById = async (id) => {
+  return apiClient.get(`/report-history/${id}`);
+};
+
+/**
+ * Delete a specific summary report
+ */
+export const deleteReportHistory = async (id) => {
+  return apiClient.delete(`/reports/${id}`);
+};
+
+/**
  * Clear session data
  */
 export const clearSessionData = async () => {
@@ -113,6 +161,17 @@ export const deleteEmployee = async (employeeId) => {
  */
 export const bulkUpsertEmployees = async (employees) => {
   return apiClient.post('/employees/bulk-upsert', { employees });
+};
+
+// ============================================
+// AUTHENTICATION API FUNCTIONS
+// ============================================
+
+/**
+ * Login admin
+ */
+export const loginAdmin = async (username, password) => {
+  return apiClient.post('/auth/login', { username, password });
 };
 
 export default apiClient;
